@@ -1,50 +1,227 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import '../config/api_config.dart';
 import '../models/identification.dart';
+import '../models/plant.dart';
+import 'api_service.dart';
 
 class IdentificationService {
-  static Future<IdentificationResult> identifyPlantFromBytes(
-    Uint8List imageBytes,
-    String filename,
-  ) async {
-    final uri = Uri.parse(ApiConfig.identifyUrl);
-    final request = http.MultipartRequest('POST', uri);
-
-    final lowerName = filename.toLowerCase();
-    MediaType mediaType = MediaType('image', 'jpeg');
-    if (lowerName.endsWith('.png')) {
-      mediaType = MediaType('image', 'png');
-    } else if (lowerName.endsWith('.webp')) {
-      mediaType = MediaType('image', 'webp');
+  /// Downsamples large raw camera images to max 1024px to prevent upload timeouts
+  static Future<Uint8List> _optimizeImage(Uint8List bytes) async {
+    if (bytes.lengthInBytes <= 400 * 1024) {
+      return bytes;
     }
-
-    final multipartFile = http.MultipartFile.fromBytes(
-      'image',
-      imageBytes,
-      filename: filename.isNotEmpty ? filename : 'plant.jpg',
-      contentType: mediaType,
-    );
-    request.files.add(multipartFile);
-
     try {
-      final streamedResponse = await request.send().timeout(
-            const Duration(seconds: 25),
-          );
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonMap = jsonDecode(response.body);
-        return IdentificationResult.fromJson(jsonMap);
-      } else {
-        final Map<String, dynamic> errorMap = jsonDecode(response.body);
-        final errorMsg = errorMap['detail'] ?? 'Identification server error';
-        throw Exception(errorMsg);
+      final codec = await ui.instantiateImageCodec(
+        bytes,
+        targetWidth: 1024,
+      );
+      final frame = await codec.getNextFrame();
+      final byteData = await frame.image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData != null) {
+        return byteData.buffer.asUint8List();
       }
     } catch (e) {
-      throw Exception('Unable to identify the plant right now: ${e.toString()}');
+      debugPrint('Image downsampling error, using raw bytes: $e');
     }
+    return bytes;
+  }
+
+  static Future<IdentificationResult> identifyPlantFromBytes(
+    Uint8List rawBytes,
+    String filename,
+  ) async {
+    // 1. Optimize image payload size
+    final Uint8List imageBytes = await _optimizeImage(rawBytes);
+    final isOptimizedPng = imageBytes != rawBytes;
+
+    final mimeType = isOptimizedPng
+        ? 'image/png'
+        : filename.toLowerCase().endsWith('.png')
+            ? 'image/png'
+            : filename.toLowerCase().endsWith('.webp')
+                ? 'image/webp'
+                : 'image/jpeg';
+
+    final base64Image = base64Encode(imageBytes);
+
+    // 2. Query Gemini Multimodal Vision API
+    try {
+      final requestBody = {
+        "contents": [
+          {
+            "parts": [
+              {
+                "inline_data": {
+                  "mime_type": mimeType,
+                  "data": base64Image,
+                }
+              },
+              {
+                "text":
+                    "You are a leading expert Indian botanist and field taxonomist specializing in native, cultivated, and wild flora of India (including trees, shrubs, climbers, herbs, and flowers).\n"
+                    "Examine this plant image carefully: inspect leaf arrangement, venation, flower structure, bark texture, canopy, or fruit.\n"
+                    "Identify the plant accurately. Return ONLY a valid JSON object matching this schema:\n"
+                    "{\n"
+                    "  \"scientific_name\": \"Latin binomial scientific name (e.g. Mangifera indica, Azadirachta indica)\",\n"
+                    "  \"common_name\": \"Primary common name (e.g. Mango Tree, Neem)\",\n"
+                    "  \"family\": \"Botanical Family (e.g. Anacardiaceae, Meliaceae)\",\n"
+                    "  \"confidence\": 0.92,\n"
+                    "  \"description\": \"Concise 2-3 sentence botanical summary highlighting characteristics\",\n"
+                    "  \"ecological_importance\": \"Ecological role, habitat value, and benefits to native biodiversity\",\n"
+                    "  \"details\": \"Key diagnostic morphological features observed in this specific image\"\n"
+                    "}\n"
+                    "If the image does not show a plant or is completely unidentifiable, set scientific_name to 'Unknown', common_name to null, and confidence to 0.15."
+              }
+            ]
+          }
+        ],
+        "generationConfig": {
+          "response_mime_type": "application/json"
+        }
+      };
+
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.geminiGenerateContentUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': ApiConfig.geminiApiKey,
+            },
+            body: jsonEncode(requestBody),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final candidates = data['candidates'] as List?;
+        if (candidates != null && candidates.isNotEmpty) {
+          final content = candidates[0]['content'];
+          final parts = content?['parts'] as List?;
+          if (parts != null && parts.isNotEmpty) {
+            String text = parts[0]['text'] ?? '';
+            text = text.replaceAll(RegExp(r'^```json\s*', multiLine: true), '');
+            text = text.replaceAll(RegExp(r'^```\s*$', multiLine: true), '').trim();
+
+            final jsonStart = text.indexOf('{');
+            final jsonEnd = text.lastIndexOf('}');
+            if (jsonStart != -1 && jsonEnd != -1) {
+              final jsonClean = text.substring(jsonStart, jsonEnd + 1);
+              final parsed = jsonDecode(jsonClean);
+
+              final scientificName = parsed['scientific_name'] ?? 'Unknown';
+              final commonName = parsed['common_name'] as String?;
+              final family = parsed['family'] as String?;
+              final description = parsed['description'] as String?;
+              final ecologicalImportance = parsed['ecological_importance'] as String?;
+              final details = parsed['details'] as String?;
+              final confVal = parsed['confidence'];
+              final confidence = (confVal is num) ? confVal.toDouble().clamp(0.0, 1.0) : 0.85;
+
+              // 3. Match against curated campus plants accurately
+              final allPlants = await ApiService.getPlants();
+              final matchedPlant = _matchCuratedPlant(scientificName, commonName, allPlants);
+
+              String? message;
+              if (confidence < 0.40) {
+                message = 'Identification uncertain. Try capturing a clearer close-up of leaves, flowers, or bark.';
+              } else if (matchedPlant == null) {
+                message = "Identified via Gemini AI Vision (Species outside curated campus index).";
+              }
+
+              return IdentificationResult(
+                success: true,
+                identification: SpeciesIdentification(
+                  scientificName: scientificName,
+                  commonName: commonName ?? matchedPlant?.commonName,
+                  confidence: confidence,
+                  family: family ?? matchedPlant?.family,
+                  description: description ?? matchedPlant?.description,
+                  ecologicalImportance: ecologicalImportance ?? matchedPlant?.ecologicalImportance,
+                  details: details,
+                ),
+                plant: matchedPlant,
+                message: message,
+              );
+            }
+          }
+        }
+      }
+      debugPrint('Gemini Vision HTTP ${response.statusCode}: ${response.body}');
+      throw Exception('Gemini Vision returned status code ${response.statusCode}');
+    } catch (e) {
+      debugPrint('Gemini Vision error or timeout: $e');
+      return IdentificationResult(
+        success: false,
+        identification: SpeciesIdentification(
+          scientificName: 'Identification Unavailable',
+          commonName: 'Network / Offline Issue',
+          confidence: 0.0,
+          description:
+              'Could not connect to Google Gemini Vision AI ($e). Please check your internet connection or mobile data and try scanning again.',
+        ),
+        plant: null,
+        message: 'Could not connect to AI identification service. Please check your network connection and try again.',
+      );
+    }
+  }
+
+  /// Accurate scientific and common name matcher for curated plants
+  static Plant? _matchCuratedPlant(
+    String scientificName,
+    String? commonName,
+    List<Plant> allPlants,
+  ) {
+    if (scientificName.toLowerCase() == 'unknown') return null;
+
+    final scicWords = scientificName
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .toList();
+
+    final commClean = (commonName ?? '')
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s/]'), '')
+        .trim();
+
+    for (final plant in allPlants) {
+      final pScic = plant.scientificName.toLowerCase();
+      final pScicWords = pScic
+          .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
+          .split(RegExp(r'\s+'))
+          .where((w) => w.isNotEmpty)
+          .toList();
+
+      // 1. Binomial scientific name match (both Genus and Species must match)
+      if (scicWords.length >= 2 && pScicWords.length >= 2) {
+        if (scicWords[0] == pScicWords[0] && scicWords[1] == pScicWords[1]) {
+          return plant;
+        }
+      }
+
+      // 2. Common name matching against curated aliases
+      if (commClean.isNotEmpty && commClean.length >= 3) {
+        final aliases = plant.commonName
+            .toLowerCase()
+            .split('/')
+            .map((s) => s.trim())
+            .toList();
+
+        for (final alias in aliases) {
+          if (alias.isEmpty) continue;
+          if (commClean == alias || commClean.contains(alias) || alias.contains(commClean)) {
+            // Guard against trivial words like "tree" or "fig" or "plant"
+            if (alias != 'tree' && alias != 'plant' && commClean != 'tree' && commClean != 'plant') {
+              return plant;
+            }
+          }
+        }
+      }
+    }
+    return null;
   }
 }

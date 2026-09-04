@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'config/api_config.dart';
 import 'screens/main_navigation_screen.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ApiConfig.init();
   runApp(const FieldIntelligenceApp());
 }
 

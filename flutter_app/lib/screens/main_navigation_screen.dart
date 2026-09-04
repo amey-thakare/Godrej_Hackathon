@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'catalog/catalog_screen.dart';
 import 'chatbot/chatbot_screen.dart';
+import 'flora_dex/flora_dex_screen.dart';
 import 'home/home_screen.dart';
 import 'scanner/scanner_screen.dart';
 
@@ -23,46 +24,101 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> screens = [
-      HomeScreen(
-        onNavigateTab: _onNavigateTab,
-        onOpenScanner: () => _onNavigateTab(1),
-      ),
-      const ScannerScreen(),
-      const CatalogScreen(),
-      const ChatbotScreen(),
+    Widget body;
+    switch (_currentIndex) {
+      case 1:
+        body = const ScannerScreen();
+        break;
+      case 2:
+        body = const CatalogScreen();
+        break;
+      case 3:
+        body = FloraDexScreen(
+          onGoScan: () => _onNavigateTab(1),
+          onOpenChatbot: () => _onNavigateTab(4),
+        );
+        break;
+      case 4:
+        body = const ChatbotScreen();
+        break;
+      case 0:
+      default:
+        body = HomeScreen(
+          onNavigateTab: _onNavigateTab,
+          onOpenScanner: () => _onNavigateTab(1),
+        );
+        break;
+    }
+
+    final tabs = [
+      {'label': 'Home', 'icon': Icons.home_rounded, 'outlined': Icons.home_outlined},
+      {'label': 'Scan', 'icon': Icons.center_focus_strong_rounded, 'outlined': Icons.center_focus_weak_rounded},
+      {'label': 'Catalog', 'icon': Icons.auto_stories_rounded, 'outlined': Icons.auto_stories_outlined},
+      {'label': 'Flora Dex', 'icon': Icons.catching_pokemon, 'outlined': Icons.catching_pokemon_outlined},
+      {'label': 'Chat', 'icon': Icons.chat_bubble_rounded, 'outlined': Icons.chat_bubble_outline_rounded},
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onNavigateTab,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home, color: AppTheme.accentLime),
-            label: 'Home',
+      backgroundColor: AppTheme.darkBackground,
+      body: body,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xF20D1410),
+          border: Border(
+            top: BorderSide(
+              color: AppTheme.accentLime.withValues(alpha: 0.12),
+              width: 1,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner),
-            activeIcon: Icon(Icons.qr_code_scanner, color: AppTheme.accentLime),
-            label: 'Scan',
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(tabs.length, (index) {
+                final isActive = _currentIndex == index;
+                final tab = tabs[index];
+                return InkWell(
+                  onTap: () => _onNavigateTab(index),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isActive ? (tab['icon'] as IconData) : (tab['outlined'] as IconData),
+                          color: isActive ? AppTheme.accentLime : AppTheme.sageText,
+                          size: 24,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          tab['label'] as String,
+                          style: TextStyle(
+                            color: isActive ? AppTheme.accentLime : AppTheme.sageText,
+                            fontSize: 10,
+                            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isActive ? AppTheme.accentLime : Colors.transparent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book_outlined),
-            activeIcon: Icon(Icons.menu_book, color: AppTheme.accentLime),
-            label: 'Catalog',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.psychology_outlined),
-            activeIcon: Icon(Icons.psychology, color: AppTheme.accentLime),
-            label: 'Guide',
-          ),
-        ],
+        ),
       ),
     );
   }

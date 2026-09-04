@@ -1,277 +1,540 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/identification.dart';
 import '../../models/plant.dart';
+import '../../services/flora_dex_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/confidence_badge.dart';
 import '../../widgets/conservation_badge.dart';
 import '../ar/ar_view_screen.dart';
 import '../chatbot/chatbot_screen.dart';
-import '../plant_detail/plant_detail_screen.dart';
 
-class IdentificationResultScreen extends StatelessWidget {
+class IdentificationResultScreen extends StatefulWidget {
   final IdentificationResult result;
-  final Uint8List capturedImageBytes;
+  final Uint8List? capturedImageBytes;
 
   const IdentificationResultScreen({
     super.key,
     required this.result,
-    required this.capturedImageBytes,
+    this.capturedImageBytes,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final ident = result.identification;
-    final plant = result.plant;
-    final isLowConfidence = ident.confidence < 0.50;
+  State<IdentificationResultScreen> createState() => _IdentificationResultScreenState();
+}
 
-    // Fallback lightweight Plant model for AR and AI Chatbot if plant is not in curated DB
-    final displayPlant = plant ??
+class _IdentificationResultScreenState extends State<IdentificationResultScreen> {
+  String? _expandedKey = "description";
+  UnlockResult? _unlockResult;
+
+  @override
+  void initState() {
+    super.initState();
+    _triggerFloraDexUnlock();
+  }
+
+  Future<void> _triggerFloraDexUnlock() async {
+    final plant = widget.result.plant;
+    if (plant != null && plant.id > 0) {
+      final res = await FloraDexService.unlockPlant(plant.id);
+      if (mounted && res.isFirstTime) {
+        setState(() {
+          _unlockResult = res;
+        });
+      }
+    }
+  }
+
+  void _toggleSection(String key) {
+    setState(() {
+      _expandedKey = (_expandedKey == key) ? null : key;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ident = widget.result.identification;
+    final plant = widget.result.plant;
+    final confidencePct = (ident.confidence * 100).round();
+
+    final displayName = plant?.commonName ?? ident.commonName ?? ident.scientificName;
+    final displayScientific = plant?.scientificName ?? ident.scientificName;
+    final displayFamily = plant?.family ?? ident.family ?? 'Flora';
+    final displayRegion = plant?.nativeRegion ?? 'Indian Subcontinent';
+    final displayHabitat = plant?.habitat ?? 'Natural Ecosystems';
+    final displayStatus = plant?.conservationStatus ?? 'Least Concern';
+    final displayDescription = plant?.description ?? ident.description ?? ident.details ?? widget.result.message ?? 'Identified species via Gemini Vision AI.';
+    final displayEcological = plant?.ecologicalImportance ?? ident.ecologicalImportance ?? 'Supports native biodiversity, pollinators, and ecosystem equilibrium.';
+    final displayThreats = plant?.threats ?? 'Habitat fragmentation and invasive competitor species.';
+    final displayConservation = plant?.conservationActions ?? 'Preserve native specimen trees and report geo-observations.';
+    final displayFeatures = plant?.identificationFeatures ?? ident.details ?? 'Identified from captured botanical leaf and flower structures.';
+
+    final sections = [
+      {'key': 'description', 'label': 'Description', 'content': displayDescription},
+      {'key': 'ecological', 'label': 'Ecological Importance', 'content': displayEcological},
+      {'key': 'threats', 'label': 'Threats', 'content': displayThreats},
+      {'key': 'conservation', 'label': 'How You Can Help', 'content': displayConservation},
+    ];
+
+    // Dummy fallback plant if not directly from DB
+    final effectivePlant = plant ??
         Plant(
           id: 0,
-          commonName: ident.commonName ?? 'Identified Plant',
-          scientificName: ident.scientificName,
-          family: 'Flora',
-          nativeRegion: 'Global / Introduced',
-          ecologicalImportance: 'Identified in real-time via Gemini Multimodal Vision AI.',
-          conservationStatus: 'Least Concern',
-          description: 'Identified species.',
-          threats: 'None reported.',
-          conservationActions: 'Observe and protect flora.',
-          habitat: 'Gardens / Urban Landscapes',
-          identificationFeatures: 'Identified via camera.',
-          imageUrl: '',
-          plantnetSpeciesName: ident.scientificName,
+          scientificName: displayScientific,
+          commonName: displayName,
+          family: displayFamily,
+          nativeRegion: displayRegion,
+          conservationStatus: displayStatus,
+          ecologicalImportance: displayEcological,
+          description: displayDescription,
+          threats: displayThreats,
+          conservationActions: displayConservation,
+          habitat: displayHabitat,
+          identificationFeatures: displayFeatures,
+          imageUrl: plant?.imageUrl,
         );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Identification Result'),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    Image.memory(
-                      capturedImageBytes,
-                      width: double.infinity,
-                      height: 220,
-                      fit: BoxFit.cover,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: ConfidenceBadge(confidence: ident.confidence),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              Text(
-                ident.commonName ?? plant?.commonName ?? 'Identified Species',
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                ident.scientificName,
-                style: const TextStyle(
-                  color: AppTheme.accentLime,
-                  fontSize: 16,
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              if (isLowConfidence || result.message != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(14),
+      backgroundColor: AppTheme.darkBackground,
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              // Hero Image Header
+              SliverAppBar(
+                expandedHeight: 260,
+                pinned: true,
+                backgroundColor: AppTheme.darkBackground,
+                leading: Container(
+                  margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.warningAmber.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.5)),
+                    color: const Color(0x990D1410),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.surfaceBorder),
                   ),
-                  child: Row(
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                actions: [
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentLime,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.accentLime.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      '$confidencePct% Match',
+                      style: GoogleFonts.syne(
+                        color: const Color(0xFF0D1410),
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      const Icon(Icons.info_outline, color: AppTheme.warningAmber),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          result.message ??
-                              'Identification uncertain. Try capturing a clearer image of the leaves, flowers, bark, or full plant.',
-                          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                      if (widget.capturedImageBytes != null)
+                        Image.memory(widget.capturedImageBytes!, fit: BoxFit.cover)
+                      else if (plant?.imageUrl != null)
+                        Image.network(plant!.imageUrl!, fit: BoxFit.cover)
+                      else
+                        Image.network(
+                          'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800',
+                          fit: BoxFit.cover,
+                        ),
+                      const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: [0.2, 0.98],
+                            colors: [
+                              Color(0x330D1410),
+                              Color(0xF50D1410),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 16,
+                        left: 20,
+                        right: 20,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              style: GoogleFonts.syne(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                height: 1.15,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              displayScientific,
+                              style: GoogleFonts.dmSans(
+                                color: AppTheme.accentLime,
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ConservationBadge(status: displayStatus, isMedium: true),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-              ],
-
-              if (plant != null) ...[
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Family: ${plant.family}',
-                              style: const TextStyle(
-                                color: AppTheme.textMuted,
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            ConservationBadge(status: plant.conservationStatus),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Native Region',
-                          style: TextStyle(
-                            color: AppTheme.accentLime,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          plant.nativeRegion,
-                          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Ecological Importance',
-                          style: TextStyle(
-                            color: AppTheme.accentLime,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          plant.ecologicalImportance,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // Always present AR Mode button for any identified plant
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ARViewScreen(plant: displayPlant),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentLime,
-                    foregroundColor: AppTheme.darkBackground,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  icon: const Icon(Icons.view_in_ar, size: 22),
-                  label: const Text(
-                    'View in AR Mode',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (plant != null)
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PlantDetailScreen(plant: plant),
+
+              // Detail Body
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Flora Dex Unlock Celebration Banner
+                      if (_unlockResult != null)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF1E3A24), Color(0xFF0F1E13)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: AppTheme.surfaceBorder),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppTheme.accentLime, width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.accentLime.withValues(alpha: 0.2),
+                                blurRadius: 16,
+                              ),
+                            ],
                           ),
-                          backgroundColor: AppTheme.surfaceCard,
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.accentLime.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.catching_pokemon,
+                                  color: AppTheme.accentLime,
+                                  size: 26,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Row(
+                                      children: [
+                                        Text(
+                                          '🎉 UNLOCKED IN FLORA DEX!',
+                                          style: TextStyle(
+                                            color: AppTheme.accentLime,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                            letterSpacing: 0.6,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '+${_unlockResult!.xpAwarded} XP earned for campus biodiversity collection',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (_unlockResult!.newAchievements.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '🏆 Honor Earned: ${_unlockResult!.newAchievements.first.title}',
+                                        style: const TextStyle(
+                                          color: Color(0xFFF59E0B),
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        icon: const Icon(Icons.info, color: AppTheme.accentLime, size: 18),
-                        label: const Text(
-                          'Plant Details',
-                          style: TextStyle(color: AppTheme.textPrimary, fontSize: 14),
-                        ),
+
+                      // Info chips
+                      Row(
+                        children: [
+                          _buildInfoChip(Icons.category_outlined, 'FAMILY', displayFamily),
+                          const SizedBox(width: 8),
+                          _buildInfoChip(Icons.public_outlined, 'REGION', displayRegion),
+                          const SizedBox(width: 8),
+                          _buildInfoChip(Icons.forest_outlined, 'HABITAT', displayHabitat),
+                        ],
                       ),
-                    ),
-                  if (plant != null) const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChatbotScreen(
-                              initialPlant: displayPlant,
-                            ),
+                      const SizedBox(height: 18),
+
+                      // Accordions
+                      ...sections.map((sec) {
+                        final key = sec['key'] as String;
+                        final label = sec['label'] as String;
+                        final content = sec['content'] as String;
+                        final isExpanded = _expandedKey == key;
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceCard,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppTheme.surfaceBorder),
+                          ),
+                          child: Column(
+                            children: [
+                              InkWell(
+                                onTap: () => _toggleSection(key),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.eco, color: AppTheme.accentLime, size: 16),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          label,
+                                          style: GoogleFonts.syne(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      Icon(
+                                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                        color: AppTheme.sageText,
+                                        size: 20,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (isExpanded)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                  child: Text(
+                                    content,
+                                    style: GoogleFonts.dmSans(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 13,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: AppTheme.surfaceBorder),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        backgroundColor: AppTheme.surfaceCard,
-                      ),
-                      icon: const Icon(Icons.psychology, color: AppTheme.accentLime, size: 18),
-                      label: const Text(
-                        'Ask AI Guide',
-                        style: TextStyle(color: AppTheme.textPrimary, fontSize: 14),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+                      }),
 
-              SizedBox(
-                width: double.infinity,
-                child: TextButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.refresh, color: AppTheme.textMuted),
-                  label: const Text(
-                    'Scan Another Plant',
-                    style: TextStyle(color: AppTheme.textMuted),
+                      const SizedBox(height: 8),
+
+                      // Did You Know card
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0x14E8A030),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0x40E8A030), width: 1),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Text('✨', style: TextStyle(fontSize: 16)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Field Note / Identification Feature',
+                                  style: GoogleFonts.syne(
+                                    color: AppTheme.amberAccent,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              displayFeatures,
+                              style: GoogleFonts.dmSans(
+                                color: const Color(0xFFD4AA70),
+                                fontSize: 13,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
+
+          // Sticky Bottom Bar
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xF20D1410),
+                border: Border(
+                  top: BorderSide(
+                    color: AppTheme.accentLime.withValues(alpha: 0.15),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ARViewScreen(plant: effectivePlant),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accentLime,
+                            foregroundColor: AppTheme.darkBackground,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 2,
+                          ),
+                          child: Text(
+                            'View in AR',
+                            style: GoogleFonts.syne(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0D1410),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChatbotScreen(initialPlant: effectivePlant),
+                              ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppTheme.surfaceBorder),
+                            backgroundColor: AppTheme.surfaceCard,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            'Ask AI Guide',
+                            style: GoogleFonts.syne(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.accentLime,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(IconData icon, String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.surfaceBorder),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: AppTheme.sageText, size: 16),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.dmSans(
+                color: AppTheme.sageText,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.dmSans(
+                color: AppTheme.textSecondary,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );
