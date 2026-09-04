@@ -186,14 +186,14 @@ class IdentificationService {
           identification: SpeciesIdentification(
             scientificName: selectedPlant.scientificName,
             commonName: selectedPlant.commonName,
-            confidence: 0.94,
+            confidence: 0.65,
             family: selectedPlant.family,
             description: selectedPlant.description,
             ecologicalImportance: selectedPlant.ecologicalImportance,
             details: selectedPlant.identificationFeatures,
           ),
           plant: selectedPlant,
-          message: null,
+          message: "Local Catalog Scanner (Offline Mode)",
         );
       }
     } catch (_) {}
@@ -254,6 +254,17 @@ class IdentificationService {
         if (plant.family.toLowerCase().contains('orchid') ||
             plant.commonName.toLowerCase().contains('orchid') ||
             plant.scientificName.toLowerCase().contains('vanda')) {
+          return plant;
+        }
+      }
+    }
+
+    // Explicit check for Passion flower (Passiflora)
+    if (scicLower.contains('passiflora') || commLower.contains('passion flower') || commLower.contains('krishna kamal')) {
+      for (final plant in allPlants) {
+        if (plant.family.toLowerCase().contains('passifloraceae') ||
+            plant.commonName.toLowerCase().contains('passion flower') ||
+            plant.scientificName.toLowerCase().contains('passiflora')) {
           return plant;
         }
       }

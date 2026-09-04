@@ -219,63 +219,66 @@ class _ARViewScreenState extends State<ARViewScreen>
           // 3. Top Floating Liquid Glass Controls
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GlassIconButton(
                     icon: Icons.arrow_back_rounded,
                     iconColor: AppTheme.textPrimary,
+                    size: 38,
                     onPressed: () => Navigator.pop(context),
                   ),
+                  const SizedBox(width: 6),
 
                   // Live Species Badge Pill
-                  GlassContainer(
-                    borderRadius: AppTheme.radiusXL,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    opacityColor: Colors.white,
-                    opacity: 0.88,
-                    blur: AppTheme.blurMedium,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.leafGreen,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 110),
-                          child: Text(
-                            _currentPlant.commonName,
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
+                  Expanded(
+                    child: GlassContainer(
+                      borderRadius: AppTheme.radiusXL,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      opacityColor: Colors.white,
+                      opacity: 0.88,
+                      blur: AppTheme.blurMedium,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.leafGreen,
+                              shape: BoxShape.circle,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        GlassBadge(
-                          label: '$confidencePct%',
-                          fontSize: 10,
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          color: AppTheme.accentForest,
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _currentPlant.commonName,
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          GlassBadge(
+                            label: '$confidencePct%',
+                            fontSize: 9.5,
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                            color: AppTheme.accentForest,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 6),
 
                   // Auto Scan Live Switch Pill
                   GlassContainer(
                     borderRadius: AppTheme.radiusXL,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     opacityColor: Colors.white,
                     opacity: 0.88,
                     blur: AppTheme.blurMedium,
@@ -292,14 +295,14 @@ class _ARViewScreenState extends State<ARViewScreen>
                           'Live AR',
                           style: TextStyle(
                             color: AppTheme.primaryForest,
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 5),
                         Container(
-                          width: 28,
-                          height: 16,
+                          width: 26,
+                          height: 15,
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: _autoScanEnabled ? AppTheme.accentForest : AppTheme.surfaceBorder,
@@ -307,8 +310,8 @@ class _ARViewScreenState extends State<ARViewScreen>
                           ),
                           alignment: _autoScanEnabled ? Alignment.centerRight : Alignment.centerLeft,
                           child: Container(
-                            width: 12,
-                            height: 12,
+                            width: 11,
+                            height: 11,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.white,

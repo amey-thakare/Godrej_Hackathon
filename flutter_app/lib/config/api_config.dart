@@ -29,7 +29,7 @@ class ApiConfig {
     } catch (_) {}
   }
 
-  static const String geminiModel = 'gemini-3.6-flash';
+  static const String geminiModel = 'gemini-1.5-flash';
   static String get geminiGenerateContentUrl =>
       'https://generativelanguage.googleapis.com/v1beta/models/$geminiModel:generateContent';
 

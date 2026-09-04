@@ -202,6 +202,21 @@ CURATED_NATIVE_PLANTS = [
         "identification_features": "Dense pom-pom or starburst floral clusters, curved linear petals, distinctive labellum lip, epiphytic roots.",
         "image_url": "https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=800",
         "plantnet_species_name": "Vanda coerulea Griff. ex Lindl."
+    },
+    {
+        "scientific_name": "Passiflora incarnata",
+        "common_name": "Passion flower / Krishna Kamal",
+        "family": "Passifloraceae",
+        "native_region": "Pan-India & Western Ghats",
+        "conservation_status": "Least Concern",
+        "ecological_importance": "Crucial host plant for native Heliconiinae butterflies and carpenter bee pollinators across tropical ecosystems.",
+        "description": "Exotic native climbing vine famous for its intricate corona of purple and white filaments surrounding prominent radial stamens.",
+        "threats": "Habitat clearance and pesticide spraying on wild hedges.",
+        "conservation_actions": "Promoting native vine greening in gardens and biodiversity corridors.",
+        "habitat": "Thickets, riverbanks, forest edges, and traditional home gardens across India.",
+        "identification_features": "Intricate radial purple/white corona filaments, 5 pale pink/purple sepals and petals, 3-lobed leaves, central prominent styles.",
+        "image_url": "https://images.unsplash.com/photo-1596727147705-61a532a659bd?w=800",
+        "plantnet_species_name": "Passiflora incarnata L."
     }
 ]
 
