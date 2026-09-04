@@ -2,10 +2,14 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/plant.dart';
 import '../../services/identification_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/glass/glass_badge.dart';
+import '../../widgets/glass/glass_button.dart';
+import '../../widgets/glass/glass_container.dart';
+import '../../widgets/glass/glass_icon_button.dart';
+import '../chatbot/chatbot_screen.dart';
 
 class ARViewScreen extends StatefulWidget {
   final Plant plant;
@@ -22,14 +26,15 @@ class _ARViewScreenState extends State<ARViewScreen>
   bool _isCameraInitialized = false;
   late Plant _currentPlant;
   bool _isScanning = false;
-  bool _autoScanEnabled = false;
+  bool _autoScanEnabled = true;
   Timer? _autoScanTimer;
-  String _statusMessage = 'AR Spatial Tracking Active';
+  String _statusMessage = '🟢 Live AR Scanner Active • Align Flower';
+  double _confidence = 0.95;
   String _activeLayer = 'Species Info';
   bool _cardOpen = true;
 
   late AnimationController _pulseController;
-  final List<String> _layers = ['Species Info', 'Threats', 'Fun Facts'];
+  final List<String> _layers = ['Species Info', 'Ecological Role', 'Field Notes'];
 
   @override
   void initState() {
@@ -38,7 +43,7 @@ class _ARViewScreenState extends State<ARViewScreen>
     _currentPlant = widget.plant;
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
     _initCamera();
   }
@@ -71,7 +76,7 @@ class _ARViewScreenState extends State<ARViewScreen>
         );
         final controller = CameraController(
           backCamera,
-          ResolutionPreset.medium,
+          ResolutionPreset.high,
           enableAudio: false,
         );
         _cameraController = controller;
@@ -80,7 +85,7 @@ class _ARViewScreenState extends State<ARViewScreen>
           setState(() {
             _isCameraInitialized = true;
           });
-          _startAutoScanTimer();
+          _startLiveScanTimer();
         }
       }
     } catch (e) {
@@ -88,23 +93,23 @@ class _ARViewScreenState extends State<ARViewScreen>
     }
   }
 
-  void _startAutoScanTimer() {
+  void _startLiveScanTimer() {
     _autoScanTimer?.cancel();
-    _autoScanTimer = Timer.periodic(const Duration(seconds: 6), (timer) {
+    _autoScanTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
       if (_autoScanEnabled && !_isScanning && _isCameraInitialized && mounted) {
-        _triggerLiveScan();
+        _triggerLiveFlowerScan();
       }
     });
   }
 
-  Future<void> _triggerLiveScan() async {
+  Future<void> _triggerLiveFlowerScan() async {
     if (_cameraController == null || !_cameraController!.value.isInitialized || _isScanning) {
       return;
     }
 
     setState(() {
       _isScanning = true;
-      _statusMessage = 'AI Vision Identifying Species...';
+      _statusMessage = '🔍 Analyzing Flower & Leaf Live...';
     });
 
     try {
@@ -113,7 +118,7 @@ class _ARViewScreenState extends State<ARViewScreen>
 
       final result = await IdentificationService.identifyPlantFromBytes(
         bytes,
-        'ar_live_scan.jpg',
+        'ar_live_flower.jpg',
       );
 
       if (mounted) {
@@ -121,50 +126,31 @@ class _ARViewScreenState extends State<ARViewScreen>
         final matchedPlant = result.plant ??
             Plant(
               id: 0,
-              commonName: ident.commonName ?? (ident.scientificName != "Unknown" ? ident.scientificName : "Identified Species"),
+              commonName: ident.commonName ?? (ident.scientificName != "Unknown" ? ident.scientificName : "Identified Flower"),
               scientificName: ident.scientificName,
-              family: 'Flora',
+              family: ident.family ?? 'Flora',
               nativeRegion: 'Indian Subcontinent',
-              ecologicalImportance: 'Identified in real-time via AI Vision.',
+              ecologicalImportance: ident.ecologicalImportance ?? 'Keystone species identified live via AR Vision.',
               conservationStatus: 'Least Concern',
-              description: 'Identified live via AR Vision.',
-              threats: 'None reported.',
-              conservationActions: 'Observe and protect flora.',
+              description: ident.description ?? 'Identified live via AR Botanical Vision.',
+              threats: 'Habitat loss.',
+              conservationActions: 'Protect native pollinators.',
               habitat: 'Natural Ecosystems',
-              identificationFeatures: 'Identified live via AR camera.',
+              identificationFeatures: ident.details ?? 'Identified live via AR camera reticle.',
               imageUrl: '',
             );
 
         setState(() {
           _currentPlant = matchedPlant;
-          _statusMessage = 'Identified: ${matchedPlant.commonName} (${(ident.confidence * 100).toStringAsFixed(0)}%)';
+          _confidence = ident.confidence;
+          _statusMessage = '🌸 Identified: ${matchedPlant.commonName} (${(ident.confidence * 100).toStringAsFixed(0)}% Match)';
         });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: AppTheme.accentLime, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Recognized: ${matchedPlant.commonName} (${(ident.confidence * 100).toStringAsFixed(0)}%)',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF1E3A27),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       }
     } catch (e) {
       debugPrint('Live AR scan error: $e');
       if (mounted) {
         setState(() {
-          _statusMessage = 'AR Spatial Tracking Active · 0.85m Depth';
+          _statusMessage = '🟢 Live AR Scanner Active • Align Flower';
         });
       }
     } finally {
@@ -187,23 +173,25 @@ class _ARViewScreenState extends State<ARViewScreen>
 
   String _getLayerContent() {
     switch (_activeLayer) {
-      case 'Threats':
-        return '⚠️ ${_currentPlant.threats}\n\nHabitat: ${_currentPlant.habitat}';
-      case 'Fun Facts':
-        return '🌿 ${_currentPlant.ecologicalImportance}\n\n✨ ${_currentPlant.identificationFeatures}';
+      case 'Ecological Role':
+        return '🐝 ${_currentPlant.ecologicalImportance}\n\nHabitat: ${_currentPlant.habitat}';
+      case 'Field Notes':
+        return '🌿 ${_currentPlant.identificationFeatures}\n\nThreats: ${_currentPlant.threats}';
       case 'Species Info':
       default:
-        return '${_currentPlant.family} · ${_currentPlant.nativeRegion}\n\n${_currentPlant.description}';
+        return 'Family: ${_currentPlant.family} · Region: ${_currentPlant.nativeRegion}\n\n${_currentPlant.description}';
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final confidencePct = (_confidence * 100).round();
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1. Live Camera Feed or Backdrop
+          // 1. Live Camera Viewport
           Positioned.fill(
             child: _isCameraInitialized &&
                     _cameraController != null &&
@@ -214,57 +202,49 @@ class _ARViewScreenState extends State<ARViewScreen>
                     fit: BoxFit.cover,
                   ),
           ),
+
           Positioned.fill(
             child: Container(
-              color: const Color(0x660D1410),
+              color: Colors.black.withValues(alpha: 0.15),
             ),
           ),
 
-          // 2. AR Grid Pattern Overlay
+          // 2. AR Grid Painter Background
           Positioned.fill(
             child: CustomPaint(
               painter: _ARGridPainter(),
             ),
           ),
 
-          // 3. Top Status Bar
+          // 3. Top Floating Liquid Glass Controls
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x990D1410),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.surfaceBorder),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                    ),
+                  GlassIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    iconColor: AppTheme.textPrimary,
+                    onPressed: () => Navigator.pop(context),
                   ),
 
-                  // Plant pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xB20D1410),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.surfaceBorder),
-                    ),
+                  // Live Species Badge Pill
+                  GlassContainer(
+                    borderRadius: AppTheme.radiusXL,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    opacityColor: Colors.white,
+                    opacity: 0.88,
+                    blur: AppTheme.blurMedium,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            _currentPlant.imageUrl ?? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=100',
-                            width: 22,
-                            height: 22,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.eco, size: 16, color: AppTheme.accentLime),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.leafGreen,
+                            shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -272,63 +252,66 @@ class _ARViewScreenState extends State<ARViewScreen>
                           constraints: const BoxConstraints(maxWidth: 110),
                           child: Text(
                             _currentPlant.commonName,
-                            style: GoogleFonts.dmSans(
-                              color: Colors.white,
+                            style: const TextStyle(
+                              color: AppTheme.textPrimary,
                               fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Text(
-                          '95%',
-                          style: TextStyle(
-                            color: AppTheme.accentLime,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        GlassBadge(
+                          label: '$confidencePct%',
+                          fontSize: 10,
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          color: AppTheme.accentForest,
                         ),
                       ],
                     ),
                   ),
 
-                  // Auto toggle switch
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xB20D1410),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.surfaceBorder),
-                    ),
+                  // Auto Scan Live Switch Pill
+                  GlassContainer(
+                    borderRadius: AppTheme.radiusXL,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    opacityColor: Colors.white,
+                    opacity: 0.88,
+                    blur: AppTheme.blurMedium,
+                    onTap: () {
+                      setState(() {
+                        _autoScanEnabled = !_autoScanEnabled;
+                      });
+                      if (_autoScanEnabled) _startLiveScanTimer();
+                    },
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Auto', style: TextStyle(color: AppTheme.sageText, fontSize: 11)),
-                        const SizedBox(width: 4),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _autoScanEnabled = !_autoScanEnabled;
-                            });
-                          },
+                        const Text(
+                          'Live AR',
+                          style: TextStyle(
+                            color: AppTheme.primaryForest,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 28,
+                          height: 16,
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: _autoScanEnabled ? AppTheme.accentForest : AppTheme.surfaceBorder,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          alignment: _autoScanEnabled ? Alignment.centerRight : Alignment.centerLeft,
                           child: Container(
-                            width: 32,
-                            height: 18,
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: _autoScanEnabled ? AppTheme.accentLime : const Color(0xFF2D4A2D),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            alignment: _autoScanEnabled ? Alignment.centerRight : Alignment.centerLeft,
-                            child: Container(
-                              width: 14,
-                              height: 14,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                              ),
+                            width: 12,
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -340,49 +323,64 @@ class _ARViewScreenState extends State<ARViewScreen>
             ),
           ),
 
-          // 4. Status message pill
+          // 4. Live Status Pill Banner below Header
           Positioned(
-            top: 100,
+            top: 84,
             left: 20,
             right: 20,
             child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xCC0D1410),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.accentLime.withValues(alpha: 0.25)),
-                ),
-                child: Text(
-                  _statusMessage,
-                  style: GoogleFonts.dmSans(
-                    color: AppTheme.accentLime,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
+              child: GlassContainer(
+                borderRadius: AppTheme.radiusXL,
+                opacityColor: Colors.white,
+                opacity: 0.90,
+                blur: AppTheme.blurMedium,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_isScanning) ...[
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.accentForest,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Text(
+                      _statusMessage,
+                      style: const TextStyle(
+                        color: AppTheme.primaryForest,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
 
-          // 5. Hexagonal AR Spatial Reticle in Center
+          // 5. Animated Spatial AR Target Reticle in Center
           Center(
             child: AnimatedBuilder(
               animation: _pulseController,
               builder: (context, child) {
-                final scale = 1.0 + (_pulseController.value * 0.06);
+                final scale = 1.0 + (_pulseController.value * 0.08);
                 return Transform.scale(
                   scale: scale,
                   child: CustomPaint(
-                    size: const Size(200, 200),
-                    painter: _HexReticlePainter(),
+                    size: const Size(220, 220),
+                    painter: _LiveARReticlePainter(isScanning: _isScanning),
                   ),
                 );
               },
             ),
           ),
 
-          // 6. Bottom Layer Controls & Expandable Info Card
+          // 6. Bottom Floating Liquid Glass Layer Switcher & AR Info Card
           Positioned(
             bottom: 0,
             left: 0,
@@ -390,150 +388,156 @@ class _ARViewScreenState extends State<ARViewScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Layer pills row
+                // Layer Selector Pills
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: _layers.map((layer) {
                     final isSelected = _activeLayer == layer;
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: InkWell(
+                      child: GlassContainer(
+                        opacityColor: isSelected ? AppTheme.primaryForest : Colors.white,
+                        opacity: isSelected ? 0.92 : 0.85,
+                        blur: AppTheme.blurSmall,
+                        borderRadius: AppTheme.radiusXL,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                         onTap: () {
                           setState(() {
                             _activeLayer = layer;
                           });
                         },
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppTheme.accentLime : const Color(0xCC0D1410),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected ? AppTheme.accentLime : AppTheme.surfaceBorder,
-                            ),
-                          ),
-                          child: Text(
-                            layer,
-                            style: TextStyle(
-                              color: isSelected ? const Color(0xFF0D1410) : AppTheme.sageText,
-                              fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            ),
+                        child: Text(
+                          layer,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : AppTheme.primaryForest,
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                           ),
                         ),
                       ),
                     );
                   }).toList(),
                 ),
+
                 const SizedBox(height: 10),
 
-                // Info card bottom sheet
+                // Floating Liquid Glass Bottom Card
                 Container(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xF50D1410),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                    border: Border.all(
-                      color: AppTheme.accentLime.withValues(alpha: 0.15),
-                      width: 1,
-                    ),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Handle bar
-                        Center(
-                          child: Container(
-                            width: 36,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: AppTheme.sageText.withValues(alpha: 0.4),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              _cardOpen = !_cardOpen;
-                            });
-                          },
-                          child: Row(
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                  child: GlassContainer(
+                    borderRadius: AppTheme.radiusXL,
+                    opacityColor: Colors.white,
+                    opacity: 0.92,
+                    blur: AppTheme.blurLarge,
+                    padding: const EdgeInsets.all(16),
+                    child: SafeArea(
+                      top: false,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _currentPlant.commonName,
-                                    style: GoogleFonts.syne(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _currentPlant.commonName,
+                                      style: const TextStyle(
+                                        color: AppTheme.textPrimary,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.4,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    _currentPlant.scientificName,
-                                    style: GoogleFonts.dmSans(
-                                      color: AppTheme.sageText,
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _currentPlant.scientificName,
+                                      style: const TextStyle(
+                                        color: AppTheme.accentForest,
+                                        fontSize: 13,
+                                        fontStyle: FontStyle.italic,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                              Icon(
-                                _cardOpen ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-                                color: AppTheme.sageText,
+                              GlassIconButton(
+                                icon: _cardOpen
+                                    ? Icons.keyboard_arrow_down_rounded
+                                    : Icons.keyboard_arrow_up_rounded,
+                                size: 36,
+                                iconSize: 20,
+                                onPressed: () {
+                                  setState(() {
+                                    _cardOpen = !_cardOpen;
+                                  });
+                                },
                               ),
                             ],
                           ),
-                        ),
 
-                        if (_cardOpen) ...[
-                          const SizedBox(height: 10),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0x800D1410),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppTheme.surfaceBorder),
-                            ),
-                            child: Text(
-                              _getLayerContent(),
-                              style: GoogleFonts.dmSans(
-                                color: AppTheme.textSecondary,
-                                fontSize: 13,
-                                height: 1.45,
+                          if (_cardOpen) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppTheme.mistBackground,
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                border: Border.all(color: AppTheme.surfaceBorder),
+                              ),
+                              child: Text(
+                                _getLayerContent(),
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 13,
+                                  height: 1.45,
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: GlassButton(
+                                    label: 'Scan Flower Live',
+                                    icon: Icons.camera_alt_rounded,
+                                    height: 46,
+                                    variant: GlassButtonVariant.primary,
+                                    isLoading: _isScanning,
+                                    onPressed: _triggerLiveFlowerScan,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: GlassButton(
+                                    label: 'Ask AI Guide',
+                                    icon: Icons.auto_awesome_rounded,
+                                    height: 46,
+                                    variant: GlassButtonVariant.secondary,
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ChatbotScreen(initialPlant: _currentPlant),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ],
-            ),
-          ),
-
-          // 7. Floating Camera Scan FAB
-          Positioned(
-            bottom: _cardOpen ? 170 : 80,
-            right: 20,
-            child: FloatingActionButton(
-              mini: true,
-              backgroundColor: AppTheme.accentLime,
-              foregroundColor: const Color(0xFF0D1410),
-              elevation: 4,
-              onPressed: _triggerLiveScan,
-              child: const Icon(Icons.camera_alt_rounded, size: 20),
             ),
           ),
         ],
@@ -542,17 +546,21 @@ class _ARViewScreenState extends State<ARViewScreen>
   }
 }
 
-// AR Hexagonal Reticle Painter
-class _HexReticlePainter extends CustomPainter {
+// Live AR Hexagonal Reticle Painter
+class _LiveARReticlePainter extends CustomPainter {
+  final bool isScanning;
+
+  _LiveARReticlePainter({required this.isScanning});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
     final paint = Paint()
-      ..color = AppTheme.accentLime
+      ..color = isScanning ? AppTheme.accentForest : Colors.white.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+      ..strokeWidth = isScanning ? 2.5 : 1.8;
 
     final path = Path();
     final List<Offset> points = [];
@@ -571,21 +579,21 @@ class _HexReticlePainter extends CustomPainter {
     path.close();
     canvas.drawPath(path, paint);
 
-    // Draw corner circular nodes
     final nodePaint = Paint()
-      ..color = AppTheme.accentLime
+      ..color = AppTheme.leafGreen
       ..style = PaintingStyle.fill;
 
     for (final pt in points) {
-      canvas.drawCircle(pt, 3.5, nodePaint);
+      canvas.drawCircle(pt, 4.0, nodePaint);
     }
 
-    // Center glow dot
-    canvas.drawCircle(center, 4, nodePaint);
+    canvas.drawCircle(center, 5, nodePaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _LiveARReticlePainter oldDelegate) {
+    return oldDelegate.isScanning != isScanning;
+  }
 }
 
 // AR Grid lines painter
@@ -593,13 +601,13 @@ class _ARGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppTheme.accentLime.withValues(alpha: 0.03)
+      ..color = AppTheme.leafGreen.withValues(alpha: 0.04)
       ..strokeWidth = 1;
 
-    for (double y = 0; y < size.height; y += 45) {
+    for (double y = 0; y < size.height; y += 40) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
-    for (double x = 0; x < size.width; x += 45) {
+    for (double x = 0; x < size.width; x += 40) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
   }

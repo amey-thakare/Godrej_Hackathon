@@ -20,7 +20,7 @@ class GlassButton extends StatefulWidget {
     required this.onPressed,
     this.variant = GlassButtonVariant.primary,
     this.width,
-    this.height = 54.0,
+    this.height = 52.0,
     this.isLoading = false,
   });
 
@@ -50,7 +50,7 @@ class _GlassButtonState extends State<GlassButton> {
         break;
       case GlassButtonVariant.secondary:
         bgOpacityColor = Colors.white;
-        opacity = 0.85;
+        opacity = 0.88;
         textColor = AppTheme.primaryForest;
         border = Border.all(
           color: AppTheme.surfaceBorder,
@@ -86,32 +86,36 @@ class _GlassButtonState extends State<GlassButton> {
           opacityColor: bgOpacityColor,
           opacity: opacity,
           border: border,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Row(
             mainAxisSize: widget.width != null ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (widget.isLoading) ...[
                 SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2.2,
+                    strokeWidth: 2.0,
                     valueColor: AlwaysStoppedAnimation<Color>(textColor),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 6),
               ] else if (widget.icon != null) ...[
-                Icon(widget.icon, color: textColor, size: 20),
-                const SizedBox(width: 8),
+                Icon(widget.icon, color: textColor, size: 18),
+                const SizedBox(width: 6),
               ],
-              Text(
-                widget.label,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
+              Flexible(
+                child: Text(
+                  widget.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
                 ),
               ),
             ],
