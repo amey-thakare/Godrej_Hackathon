@@ -56,7 +56,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       {'label': 'Scan', 'icon': Icons.center_focus_strong_rounded, 'outlined': Icons.center_focus_weak_rounded},
       {'label': 'Explore', 'icon': Icons.auto_stories_rounded, 'outlined': Icons.auto_stories_outlined},
       {'label': 'My Flora', 'icon': Icons.collections_bookmark_rounded, 'outlined': Icons.collections_bookmark_outlined},
-      {'label': 'AI Assistant', 'icon': Icons.auto_awesome_rounded, 'outlined': Icons.auto_awesome_outlined},
+      {'label': 'AI Guide', 'icon': Icons.auto_awesome_rounded, 'outlined': Icons.auto_awesome_outlined},
     ];
 
     return Scaffold(
@@ -65,12 +65,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: body,
       bottomNavigationBar: SafeArea(
         child: Container(
-          height: 72,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          height: 70,
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
           child: GlassContainer(
             borderRadius: AppTheme.radiusXL,
             opacityColor: Colors.white,
-            opacity: 0.88,
+            opacity: 0.92,
             blur: AppTheme.blurMedium,
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.6),
@@ -84,9 +84,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 offset: const Offset(0, 8),
               ),
             ],
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(tabs.length, (index) {
                 final isActive = _currentIndex == index;
                 final tab = tabs[index];
@@ -96,8 +96,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   return GestureDetector(
                     onTap: () => _onNavigateTab(1),
                     child: Container(
-                      width: 50,
-                      height: 50,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppTheme.primaryForest,
@@ -114,45 +114,50 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                         child: Icon(
                           Icons.camera_alt_rounded,
                           color: Colors.white,
-                          size: 24,
+                          size: 22,
                         ),
                       ),
                     ),
                   );
                 }
 
-                return InkWell(
-                  onTap: () => _onNavigateTab(index),
-                  borderRadius: BorderRadius.circular(20),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOutCubic,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? AppTheme.softSage.withValues(alpha: 0.70)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isActive ? (tab['icon'] as IconData) : (tab['outlined'] as IconData),
-                          color: isActive ? AppTheme.primaryForest : AppTheme.textSecondary,
-                          size: 22,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          tab['label'] as String,
-                          style: TextStyle(
+                return Expanded(
+                  child: InkWell(
+                    onTap: () => _onNavigateTab(index),
+                    borderRadius: BorderRadius.circular(18),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? AppTheme.softSage.withValues(alpha: 0.75)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isActive ? (tab['icon'] as IconData) : (tab['outlined'] as IconData),
                             color: isActive ? AppTheme.primaryForest : AppTheme.textSecondary,
-                            fontSize: 10,
-                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                            letterSpacing: -0.1,
+                            size: 20,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              tab['label'] as String,
+                              style: TextStyle(
+                                color: isActive ? AppTheme.primaryForest : AppTheme.textSecondary,
+                                fontSize: 10,
+                                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                                letterSpacing: -0.1,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

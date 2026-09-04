@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../models/plant.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass/glass_button.dart';
 import '../../widgets/glass/glass_container.dart';
+import '../ar/ar_view_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final Function(int) onNavigateTab;
@@ -12,6 +15,42 @@ class HomeScreen extends StatelessWidget {
     required this.onNavigateTab,
     required this.onOpenScanner,
   });
+
+  void _openARMode(BuildContext context) async {
+    Plant? defaultPlant;
+    try {
+      final plants = await ApiService.getPlants();
+      if (plants.isNotEmpty) {
+        defaultPlant = plants.first;
+      }
+    } catch (_) {}
+
+    defaultPlant ??= Plant(
+      id: 1,
+      scientificName: 'Nelumbo nucifera',
+      commonName: 'Lotus',
+      family: 'Nelumbonaceae',
+      nativeRegion: 'Pan-India',
+      conservationStatus: 'Least Concern',
+      ecologicalImportance: 'Sacred aquatic keystone plant supporting freshwater wetland ecosystems.',
+      description: 'National flower of India. Perennial aquatic plant with peltate leaves and radiant pink blooms.',
+      threats: 'Pollution.',
+      conservationActions: 'Protect wetlands.',
+      habitat: 'Ponds and lakes.',
+      identificationFeatures: 'Pink flowers, peltate leaves.',
+      imageUrl: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800',
+      plantnetSpeciesName: 'Nelumbo nucifera',
+    );
+
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ARViewScreen(plant: defaultPlant!),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +154,7 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 32),
 
                   // Hero Title & Description
                   const Text(
@@ -153,19 +192,34 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
 
-                  // PRIMARY LIQUID GLASS CTA [ Identify a Plant ]
-                  GlassButton(
-                    label: 'Identify a Plant',
-                    icon: Icons.camera_alt_rounded,
-                    width: double.infinity,
-                    height: 56,
-                    variant: GlassButtonVariant.primary,
-                    onPressed: onOpenScanner,
+                  // PRIMARY LIQUID GLASS HERO CTAS (Side-by-side or dual row)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GlassButton(
+                          label: 'Identify Plant',
+                          icon: Icons.camera_alt_rounded,
+                          height: 54,
+                          variant: GlassButtonVariant.primary,
+                          onPressed: onOpenScanner,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GlassButton(
+                          label: 'View in AR',
+                          icon: Icons.view_in_ar_rounded,
+                          height: 54,
+                          variant: GlassButtonVariant.secondary,
+                          onPressed: () => _openARMode(context),
+                        ),
+                      ),
+                    ],
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Secondary Floating Quick Action Pills
                   SingleChildScrollView(
@@ -174,14 +228,14 @@ class HomeScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         _buildQuickActionPill(
-                          icon: Icons.auto_stories_rounded,
-                          label: 'Explore Flora',
-                          onTap: () => onNavigateTab(2),
+                          icon: Icons.view_in_ar_rounded,
+                          label: 'View in AR',
+                          onTap: () => _openARMode(context),
                         ),
                         const SizedBox(width: 10),
                         _buildQuickActionPill(
-                          icon: Icons.map_rounded,
-                          label: 'Nature Map',
+                          icon: Icons.auto_stories_rounded,
+                          label: 'Explore Flora',
                           onTap: () => onNavigateTab(2),
                         ),
                         const SizedBox(width: 10),
@@ -200,9 +254,9 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
 
-                  // Solid Surface Biodiversity Overview
+                  // Solid Surface Biodiversity Overview Card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
@@ -292,19 +346,22 @@ class HomeScreen extends StatelessWidget {
             number,
             style: const TextStyle(
               color: AppTheme.primaryForest,
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
