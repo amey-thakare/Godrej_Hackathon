@@ -389,34 +389,38 @@ class _ARViewScreenState extends State<ARViewScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Layer Selector Pills
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _layers.map((layer) {
-                    final isSelected = _activeLayer == layer;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: GlassContainer(
-                        opacityColor: isSelected ? AppTheme.primaryForest : Colors.white,
-                        opacity: isSelected ? 0.92 : 0.85,
-                        blur: AppTheme.blurSmall,
-                        borderRadius: AppTheme.radiusXL,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        onTap: () {
-                          setState(() {
-                            _activeLayer = layer;
-                          });
-                        },
-                        child: Text(
-                          layer,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : AppTheme.primaryForest,
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: _layers.map((layer) {
+                      final isSelected = _activeLayer == layer;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                        child: GlassContainer(
+                          opacityColor: isSelected ? AppTheme.primaryForest : Colors.white,
+                          opacity: isSelected ? 0.92 : 0.85,
+                          blur: AppTheme.blurSmall,
+                          borderRadius: AppTheme.radiusXL,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          onTap: () {
+                            setState(() {
+                              _activeLayer = layer;
+                            });
+                          },
+                          child: Text(
+                            layer,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : AppTheme.primaryForest,
+                              fontSize: 11.5,
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
 
                 const SizedBox(height: 10),

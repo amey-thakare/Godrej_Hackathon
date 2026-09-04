@@ -214,5 +214,23 @@
     "plantnet_species_name": "Alstonia scholaris (L.) R.Br.",
     "created_at": "2026-09-03 19:05:30.694776",
     "updated_at": "2026-09-03 19:05:30.694777"
+  },
+  {
+    "id": 13,
+    "scientific_name": "Vanda coerulea",
+    "common_name": "Orchid",
+    "family": "Orchidaceae",
+    "native_region": "Western Ghats & North-East India",
+    "conservation_status": "Vulnerable",
+    "ecological_importance": "Iconic epiphyte species supporting specialized orchid bee and moth pollinators in tropical humid forest canopies.",
+    "description": "Elegant epiphytic orchid famous for its striking blue, pink, and multi-patterned blooms with dense tessellated petals.",
+    "threats": "Over-collection for wild horticulture, forest canopy loss.",
+    "conservation_actions": "Protection under CITES Appendix II, orchid sanctuary preservation in native mountain ranges.",
+    "habitat": "Humid subtropical mountain forests and tropical evergreen canopies.",
+    "identification_features": "Dense pom-pom or starburst floral clusters, curved linear petals, distinctive labellum lip, epiphytic roots.",
+    "image_url": "https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=800",
+    "plantnet_species_name": "Vanda coerulea Griff. ex Lindl.",
+    "created_at": "2026-09-05 01:17:00.000000",
+    "updated_at": "2026-09-05 01:17:00.000000"
   }
 ]

@@ -187,6 +187,21 @@ CURATED_NATIVE_PLANTS = [
         "identification_features": "Whorls of 7 glossy oblanceolate leaves, strongly fragrant cream-green tiny flowers, long twin pendulous follicle pods.",
         "image_url": "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=800",
         "plantnet_species_name": "Alstonia scholaris (L.) R.Br."
+    },
+    {
+        "scientific_name": "Vanda coerulea",
+        "common_name": "Orchid",
+        "family": "Orchidaceae",
+        "native_region": "Western Ghats & North-East India",
+        "conservation_status": "Vulnerable",
+        "ecological_importance": "Iconic epiphyte species supporting specialized orchid bee and moth pollinators in tropical humid forest canopies.",
+        "description": "Elegant epiphytic orchid famous for its striking blue, pink, and multi-patterned blooms with dense tessellated petals.",
+        "threats": "Over-collection for wild horticulture, forest canopy loss.",
+        "conservation_actions": "Protection under CITES Appendix II, orchid sanctuary preservation in native mountain ranges.",
+        "habitat": "Humid subtropical mountain forests and tropical evergreen canopies.",
+        "identification_features": "Dense pom-pom or starburst floral clusters, curved linear petals, distinctive labellum lip, epiphytic roots.",
+        "image_url": "https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=800",
+        "plantnet_species_name": "Vanda coerulea Griff. ex Lindl."
     }
 ]
 
