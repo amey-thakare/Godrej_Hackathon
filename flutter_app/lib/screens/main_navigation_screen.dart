@@ -63,13 +63,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: body,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: const Color(0xF20D1410),
-          border: Border(
+          color: Colors.white,
+          border: const Border(
             top: BorderSide(
-              color: AppTheme.accentLime.withValues(alpha: 0.12),
-              width: 1,
+              color: AppTheme.surfaceBorder,
+              width: 1.2,
             ),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF15803D).withValues(alpha: 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
         child: SafeArea(
           top: false,
@@ -90,14 +97,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       children: [
                         Icon(
                           isActive ? (tab['icon'] as IconData) : (tab['outlined'] as IconData),
-                          color: isActive ? AppTheme.accentLime : AppTheme.sageText,
+                          color: isActive ? AppTheme.accentLime : const Color(0xFF64748B),
                           size: 24,
                         ),
                         const SizedBox(height: 3),
                         Text(
                           tab['label'] as String,
                           style: TextStyle(
-                            color: isActive ? AppTheme.accentLime : AppTheme.sageText,
+                            color: isActive ? AppTheme.accentLime : const Color(0xFF64748B),
                             fontSize: 10,
                             fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                           ),

@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Premium Field Intelligence Color Palette
-  static const Color darkBackground = Color(0xFF070E09); // Deepest Emerald Midnight
-  static const Color surfaceCard = Color(0xD90E1A11); // Glass card rgba(14,26,17,0.85)
-  static const Color surfaceBorder = Color(0x3B10B981); // Neon Emerald Border
-  static const Color surfaceGlass = Color(0xE60A140C);
-  static const Color primaryForest = Color(0xFF132A1C); // Rich Forest Green
-  static const Color accentLime = Color(0xFFA3E635); // Electric Lime #A3E635
-  static const Color emeraldNeon = Color(0xFF10B981); // Vibrant Emerald #10B981
-  static const Color amberAccent = Color(0xFFF59E0B); // Warm Amber
-  static const Color warningAmber = Color(0xFFF59E0B);
-  static const Color sageText = Color(0xFF86EFAC); // Soft Sage Green
-  static const Color textPrimary = Color(0xFFF8FAFC);
-  static const Color textSecondary = Color(0xFFCBD5E1);
+  // Clean Light Botanical Color Palette (High Daytime Visibility)
+  static const Color darkBackground = Color(0xFFF4FAF6); // Fresh Soft Botanical Backdrop
+  static const Color surfaceCard = Color(0xFFFFFFFF); // Pure White Surface
+  static const Color surfaceBorder = Color(0xFFCCE8D9); // Soft Mint Sage Border
+  static const Color surfaceGlass = Color(0xF2FFFFFF);
+  static const Color primaryForest = Color(0xFF166534); // Deep Forest Green
+  static const Color accentLime = Color(0xFF15803D); // Lush Botanical Green #15803D
+  static const Color emeraldNeon = Color(0xFF059669); // Vibrant Emerald #059669
+  static const Color amberAccent = Color(0xFFD97706); // Warm Amber
+  static const Color warningAmber = Color(0xFFD97706);
+  static const Color sageText = Color(0xFF047857); // Deep Sage Text #047857
+  static const Color textPrimary = Color(0xFF0B2B1B); // Deep Dark Evergreen Text
+  static const Color textSecondary = Color(0xFF2D4A3E); // Soft Charcoal Evergreen
   static const Color textMuted = Color(0xFF64748B);
 
   static BoxDecoration get glassDecoration => BoxDecoration(
@@ -23,10 +23,10 @@ class AppTheme {
         border: Border.all(color: surfaceBorder, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: const Color(0xFF15803D).withValues(alpha: 0.08),
             blurRadius: 16,
-            spreadRadius: 2,
-            offset: const Offset(0, 6),
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
           ),
         ],
       );
@@ -34,14 +34,14 @@ class AppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: darkBackground,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: accentLime,
         secondary: emeraldNeon,
-        surface: darkBackground,
-        onPrimary: darkBackground,
-        onSecondary: textPrimary,
+        surface: surfaceCard,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
         onSurface: textPrimary,
       ),
       textTheme: TextTheme(
@@ -84,14 +84,15 @@ class AppTheme {
           fontWeight: FontWeight.normal,
         ),
         labelLarge: GoogleFonts.syne(
-          color: darkBackground,
+          color: Colors.white,
           fontSize: 15,
           fontWeight: FontWeight.bold,
         ),
       ),
       cardTheme: CardThemeData(
         color: surfaceCard,
-        elevation: 0,
+        elevation: 2,
+        shadowColor: const Color(0xFF15803D).withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: const BorderSide(color: surfaceBorder, width: 1.2),
@@ -110,11 +111,11 @@ class AppTheme {
         iconTheme: const IconThemeData(color: textPrimary),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Color(0xF5070E09),
+        backgroundColor: Colors.white,
         selectedItemColor: accentLime,
-        unselectedItemColor: sageText,
+        unselectedItemColor: Color(0xFF64748B),
         type: BottomNavigationBarType.fixed,
-        elevation: 0,
+        elevation: 8,
       ),
     );
   }

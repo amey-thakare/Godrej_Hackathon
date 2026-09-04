@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
-          // 1. Forest Canopy Background Image with Gradient Overlay
+          // 1. Forest Canopy Background Image with Crisp Light Gradient Overlay
           Positioned.fill(
             child: Image.network(
               'https://images.unsplash.com/photo-1693743459489-7bc63e539a73?w=800&h=1200&fit=crop&auto=format',
@@ -34,12 +34,12 @@ class HomeScreen extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  stops: [0.0, 0.35, 0.70, 1.0],
+                  stops: [0.0, 0.30, 0.65, 1.0],
                   colors: [
-                    Color(0xCC070E09),
-                    Color(0x73070E09),
-                    Color(0xD9070E09),
-                    Color(0xFF070E09),
+                    Color(0xF0FFFFFF),
+                    Color(0xDCF4FAF6),
+                    Color(0xF2F4FAF6),
+                    Color(0xFFF4FAF6),
                   ],
                 ),
               ),
@@ -60,12 +60,19 @@ class HomeScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                         decoration: BoxDecoration(
-                          color: const Color(0xB2070E09),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: AppTheme.accentLime.withValues(alpha: 0.3),
+                            color: AppTheme.surfaceBorder,
                             width: 1.2,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF15803D).withValues(alpha: 0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -76,13 +83,6 @@ class HomeScreen extends StatelessWidget {
                               decoration: const BoxDecoration(
                                 color: AppTheme.accentLime,
                                 shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.accentLime,
-                                    blurRadius: 6,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -101,11 +101,18 @@ class HomeScreen extends StatelessWidget {
                         width: 42,
                         height: 42,
                         decoration: BoxDecoration(
-                          color: const Color(0xB2070E09),
+                          color: Colors.white,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppTheme.accentLime.withValues(alpha: 0.25),
+                            color: AppTheme.surfaceBorder,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF15803D).withValues(alpha: 0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Icons.person_outline_rounded,
@@ -131,7 +138,7 @@ class HomeScreen extends StatelessWidget {
                   Text(
                     "Discover What's\nGrowing Around You",
                     style: GoogleFonts.syne(
-                      color: Colors.white,
+                      color: AppTheme.textPrimary,
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
                       height: 1.15,
@@ -141,7 +148,7 @@ class HomeScreen extends StatelessWidget {
                   Text(
                     "AI-powered plant identification & real-time conservation data for India's native flora.",
                     style: GoogleFonts.dmSans(
-                      color: AppTheme.sageText,
+                      color: AppTheme.textSecondary,
                       fontSize: 14,
                       height: 1.45,
                     ),
@@ -193,9 +200,9 @@ class HomeScreen extends StatelessWidget {
                       onPressed: onOpenScanner,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.accentLime,
-                        foregroundColor: AppTheme.darkBackground,
-                        elevation: 6,
-                        shadowColor: AppTheme.accentLime.withValues(alpha: 0.4),
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: AppTheme.accentLime.withValues(alpha: 0.3),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
@@ -208,14 +215,14 @@ class HomeScreen extends StatelessWidget {
                             style: GoogleFonts.syne(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF070E09),
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(width: 8),
                           const Icon(
                             Icons.center_focus_strong_rounded,
                             size: 22,
-                            color: Color(0xFF070E09),
+                            color: Colors.white,
                           ),
                         ],
                       ),
@@ -236,12 +243,19 @@ class HomeScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: const Color(0xD9070E09),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppTheme.accentLime.withValues(alpha: 0.18),
+            color: AppTheme.surfaceBorder,
             width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF15803D).withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -258,7 +272,7 @@ class HomeScreen extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               style: GoogleFonts.dmSans(
-                color: AppTheme.sageText,
+                color: AppTheme.textSecondary,
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
               ),
@@ -281,12 +295,19 @@ class HomeScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: const Color(0xD9070E09),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppTheme.accentLime.withValues(alpha: 0.18),
+            color: AppTheme.surfaceBorder,
             width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF15803D).withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,7 +316,7 @@ class HomeScreen extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: AppTheme.accentLime.withValues(alpha: 0.15),
+                color: AppTheme.accentLime.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(icon, color: AppTheme.accentLime, size: 22),
@@ -304,7 +325,7 @@ class HomeScreen extends StatelessWidget {
             Text(
               title,
               style: GoogleFonts.syne(
-                color: Colors.white,
+                color: AppTheme.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -313,7 +334,7 @@ class HomeScreen extends StatelessWidget {
             Text(
               subtitle,
               style: GoogleFonts.dmSans(
-                color: AppTheme.sageText,
+                color: AppTheme.textSecondary,
                 fontSize: 12,
               ),
             ),
