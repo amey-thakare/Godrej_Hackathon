@@ -4,6 +4,7 @@ import '../../models/plant.dart';
 import '../../services/api_service.dart';
 import '../../services/flora_dex_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/glass/glass_container.dart';
 import 'achievements_screen.dart';
 import 'locked_plant_sheet.dart';
 import 'unlocked_plant_sheet.dart';
@@ -68,7 +69,6 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
   List<Plant> _getFilteredAndSortedPlants() {
     var list = List<Plant>.from(_plants);
 
-    // Sort by rarity: Legendary (0) -> Rare (1) -> Uncommon (2) -> Common (3)
     list.sort((a, b) {
       final metaA = FloraDexPlantMeta.getMeta(a.id);
       final metaB = FloraDexPlantMeta.getMeta(b.id);
@@ -98,15 +98,15 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
       body: SafeArea(
         bottom: false,
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: AppTheme.accentLime))
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.accentForest))
             : RefreshIndicator(
-                color: AppTheme.accentLime,
-                backgroundColor: const Color(0xFF131D17),
+                color: AppTheme.accentForest,
+                backgroundColor: Colors.white,
                 onRefresh: _loadFloraDexData,
                 child: CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    // Header Bar with Trophy Link
+                    // Header Bar
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -116,34 +116,32 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Row(
-                                  children: [
-                                    Icon(Icons.catching_pokemon, color: AppTheme.accentLime, size: 22),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'FLORA DEX',
-                                      style: TextStyle(
-                                        color: AppTheme.accentLime,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1.5,
-                                      ),
-                                    ),
-                                  ],
+                                const Text(
+                                  'My Discoveries',
+                                  style: TextStyle(
+                                    color: AppTheme.textPrimary,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.8,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   _getRankTitle(_totalXp),
                                   style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.accentForest,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ],
                             ),
-                            // Achievements Shelf CTA Button
-                            InkWell(
+                            GlassContainer(
+                              borderRadius: AppTheme.radiusXL,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              opacityColor: Colors.white,
+                              opacity: 0.88,
+                              blur: AppTheme.blurSmall,
                               onTap: () async {
                                 await Navigator.push(
                                   context,
@@ -153,37 +151,20 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                                 );
                                 _loadFloraDexData();
                               },
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF131D17),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.military_tech_rounded, color: AppTheme.amberAccent, size: 18),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Badges',
+                                    style: TextStyle(
+                                      color: AppTheme.primaryForest,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                                      blurRadius: 10,
-                                    ),
-                                  ],
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.military_tech_rounded, color: Color(0xFFF59E0B), size: 18),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Badges',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
                           ],
@@ -196,21 +177,7 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                       child: Container(
                         margin: const EdgeInsets.fromLTRB(20, 16, 20, 14),
                         padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF1B2E1E), Color(0xFF0F1A13)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: AppTheme.accentLime.withValues(alpha: 0.2)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.accentLime.withValues(alpha: 0.08),
-                              blurRadius: 20,
-                            ),
-                          ],
-                        ),
+                        decoration: AppTheme.solidCardDecoration,
                         child: Column(
                           children: [
                             Row(
@@ -220,13 +187,13 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.accentLime.withValues(alpha: 0.15),
+                                      decoration: const BoxDecoration(
+                                        color: AppTheme.softSage,
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(
-                                        Icons.eco_rounded,
-                                        color: AppTheme.accentLime,
+                                        Icons.collections_bookmark_rounded,
+                                        color: AppTheme.primaryForest,
                                         size: 18,
                                       ),
                                     ),
@@ -235,40 +202,42 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         const Text(
-                                          'Campus Discoveries',
-                                          style: TextStyle(color: AppTheme.sageText, fontSize: 11),
+                                          'Field Notebook Progress',
+                                          style: TextStyle(
+                                            color: AppTheme.textSecondary,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
                                         Text(
-                                          '$discoveredCount / $totalCount species discovered',
+                                          '$discoveredCount / $totalCount species identified',
                                           style: const TextStyle(
-                                            color: Colors.white,
+                                            color: AppTheme.textPrimary,
                                             fontSize: 15,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight: FontWeight.w700,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
-                                // XP Pill
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF22C55E).withValues(alpha: 0.15),
+                                    color: AppTheme.softSage,
                                     borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: const Color(0xFF22C55E)),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.bolt_rounded, color: Color(0xFF22C55E), size: 16),
+                                      const Icon(Icons.bolt_rounded, color: AppTheme.accentForest, size: 16),
                                       const SizedBox(width: 4),
                                       Text(
                                         '$_totalXp XP',
                                         style: const TextStyle(
-                                          color: Color(0xFF22C55E),
+                                          color: AppTheme.primaryForest,
                                           fontSize: 13,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w800,
                                         ),
                                       ),
                                     ],
@@ -281,9 +250,9 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                               borderRadius: BorderRadius.circular(8),
                               child: LinearProgressIndicator(
                                 value: totalCount == 0 ? 0.0 : (discoveredCount / totalCount),
-                                backgroundColor: Colors.white10,
-                                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentLime),
-                                minHeight: 9,
+                                backgroundColor: AppTheme.surfaceBorder,
+                                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentForest),
+                                minHeight: 8,
                               ),
                             ),
                           ],
@@ -298,11 +267,11 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
                           children: [
-                            _buildFilterChip('All', null),
-                            _buildFilterChip('Legendary', RarityTier.legendary.color),
-                            _buildFilterChip('Rare', RarityTier.rare.color),
-                            _buildFilterChip('Uncommon', RarityTier.uncommon.color),
-                            _buildFilterChip('Common', RarityTier.common.color),
+                            _buildFilterPill('All', null),
+                            _buildFilterPill('Legendary', RarityTier.legendary.color),
+                            _buildFilterPill('Rare', RarityTier.rare.color),
+                            _buildFilterPill('Uncommon', RarityTier.uncommon.color),
+                            _buildFilterPill('Common', RarityTier.common.color),
                           ],
                         ),
                       ),
@@ -310,7 +279,7 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
 
                     const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-                    // 2-Column Grid of Plant Cards
+                    // 2-Column Grid of Plant Notebook Cards
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 90),
                       sliver: SliverGrid(
@@ -341,40 +310,35 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label, Color? tierColor) {
+  Widget _buildFilterPill(String label, Color? tierColor) {
     final isSelected = _selectedFilter == label;
-    final color = tierColor ?? AppTheme.accentLime;
+    final color = tierColor ?? AppTheme.primaryForest;
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        selected: isSelected,
-        label: Text(label),
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.black : Colors.white70,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-          fontSize: 12,
-        ),
-        backgroundColor: const Color(0xFF131D17),
-        selectedColor: color,
-        showCheckmark: false,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isSelected ? color : Colors.white12,
-            width: 1,
-          ),
-        ),
-        onSelected: (_) {
+      child: GlassContainer(
+        opacityColor: isSelected ? color : Colors.white,
+        opacity: isSelected ? 0.92 : 0.85,
+        blur: AppTheme.blurSmall,
+        borderRadius: AppTheme.radiusXL,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        onTap: () {
           setState(() {
             _selectedFilter = label;
           });
         },
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppTheme.primaryForest,
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
 
-  // Card for Unlocked Species
   Widget _buildUnlockedCard(Plant plant, FloraDexPlantMeta meta) {
     final rarity = meta.rarity;
 
@@ -394,27 +358,13 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
       child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF131D17),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: rarity.color.withValues(alpha: 0.5),
-            width: rarity == RarityTier.legendary ? 2.0 : 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: rarity.glowColor,
-              blurRadius: rarity == RarityTier.legendary ? 16 : 8,
-            ),
-          ],
-        ),
+        decoration: AppTheme.solidCardDecoration,
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Image with Rarity Badge
             Expanded(
               flex: 5,
               child: Stack(
@@ -425,11 +375,11 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                           plant.imageUrl!,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Center(
-                            child: Icon(Icons.eco_rounded, size: 40, color: AppTheme.sageText),
+                            child: Icon(Icons.eco_rounded, size: 40, color: AppTheme.accentForest),
                           ),
                         )
                       : const Center(
-                          child: Icon(Icons.eco_rounded, size: 40, color: AppTheme.sageText),
+                          child: Icon(Icons.eco_rounded, size: 40, color: AppTheme.accentForest),
                         ),
                   Positioned(
                     top: 8,
@@ -437,48 +387,24 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xDD0D1410),
+                        color: Colors.white.withValues(alpha: 0.90),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: rarity.color),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(rarity.icon, size: 10, color: rarity.color),
-                          const SizedBox(width: 3),
-                          Text(
-                            rarity.label.toUpperCase(),
-                            style: TextStyle(
-                              color: rarity.color,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Color(0xDD0D1410),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_circle_rounded,
-                        color: Color(0xFF22C55E),
-                        size: 16,
+                      child: Text(
+                        rarity.label.toUpperCase(),
+                        style: TextStyle(
+                          color: rarity.color,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            // Bottom Info
             Expanded(
               flex: 4,
               child: Padding(
@@ -492,9 +418,9 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.textPrimary,
                         fontSize: 13.5,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -503,9 +429,10 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: AppTheme.sageText,
+                        color: AppTheme.accentForest,
                         fontSize: 11,
                         fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -514,14 +441,14 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                       children: [
                         Text(
                           plant.family,
-                          style: const TextStyle(color: Colors.white38, fontSize: 10),
+                          style: const TextStyle(color: AppTheme.textMuted, fontSize: 10),
                         ),
                         Text(
                           '+${rarity.baseXP} XP',
                           style: TextStyle(
                             color: rarity.color,
                             fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ],
@@ -536,7 +463,6 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
     );
   }
 
-  // Card for Locked Species (Silhouette)
   Widget _buildLockedCard(Plant plant, FloraDexPlantMeta meta) {
     final rarity = meta.rarity;
 
@@ -553,21 +479,17 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0A0F0D),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: rarity.color.withValues(alpha: 0.25),
-            width: 1.0,
-          ),
+          color: AppTheme.mistBackground,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          border: Border.all(color: AppTheme.surfaceBorder),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Silhouette Image
             Expanded(
               flex: 5,
               child: Stack(
@@ -577,54 +499,31 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                   plant.imageUrl != null && plant.imageUrl!.isNotEmpty
                       ? ColorFiltered(
                           colorFilter: const ColorFilter.matrix(<double>[
-                            0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0,
-                            0, 0, 0, 0.90, 0,
+                            0.2126, 0.7152, 0.0722, 0, 0,
+                            0.2126, 0.7152, 0.0722, 0, 0,
+                            0.2126, 0.7152, 0.0722, 0, 0,
+                            0, 0, 0, 0.35, 0,
                           ]),
                           child: Image.network(
                             plant.imageUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(color: Colors.black),
+                            errorBuilder: (_, __, ___) => Container(color: AppTheme.surfaceBorder),
                           ),
                         )
-                      : Container(color: Colors.black),
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xEE0D1410),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: rarity.color.withValues(alpha: 0.6)),
-                      ),
-                      child: Text(
-                        rarity.label.toUpperCase(),
-                        style: TextStyle(
-                          color: rarity.color,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ),
-                  ),
+                      : Container(color: AppTheme.surfaceBorder),
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: rarity.color.withValues(alpha: 0.6)),
                       ),
-                      child: Icon(Icons.lock_rounded, color: rarity.color, size: 20),
+                      child: const Icon(Icons.lock_rounded, color: AppTheme.textMuted, size: 18),
                     ),
                   ),
                 ],
               ),
             ),
-            // Bottom Info
             Expanded(
               flex: 4,
               child: Padding(
@@ -634,20 +533,21 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      '???',
+                      'Undiscovered',
                       style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
+                        color: AppTheme.textMuted,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
-                      'Undiscovered Specimen',
-                      style: TextStyle(
-                        color: Colors.white24,
-                        fontSize: 10,
+                    Text(
+                      plant.commonName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 11,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -656,15 +556,15 @@ class _FloraDexScreenState extends State<FloraDexScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Tap for hint',
-                          style: TextStyle(color: AppTheme.sageText, fontSize: 10),
+                          'Tap hint',
+                          style: TextStyle(color: AppTheme.textMuted, fontSize: 10),
                         ),
                         Text(
                           '+${rarity.baseXP} XP',
                           style: TextStyle(
-                            color: rarity.color.withValues(alpha: 0.7),
+                            color: rarity.color.withValues(alpha: 0.8),
                             fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],

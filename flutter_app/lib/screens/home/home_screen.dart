@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/glass/glass_button.dart';
+import '../../widgets/glass/glass_container.dart';
 
 class HomeScreen extends StatelessWidget {
   final Function(int) onNavigateTab;
@@ -18,62 +19,60 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
-          // 1. Forest Canopy Background Image with Crisp Light Gradient Overlay
-          Positioned.fill(
-            child: Image.network(
-              'https://images.unsplash.com/photo-1693743459489-7bc63e539a73?w=800&h=1200&fit=crop&auto=format',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(color: AppTheme.darkBackground);
-              },
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: [0.0, 0.30, 0.65, 1.0],
-                  colors: [
-                    Color(0xF0FFFFFF),
-                    Color(0xDCF4FAF6),
-                    Color(0xF2F4FAF6),
-                    Color(0xFFF4FAF6),
-                  ],
+          // 1. Botanical Macro Photo Background with Environmental Gradient
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.52,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.network(
+                    'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=1000&h=1400&fit=crop&auto=format',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(color: AppTheme.primaryForest);
+                    },
+                  ),
                 ),
-              ),
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: const [0.0, 0.45, 0.85, 1.0],
+                        colors: [
+                          Colors.black.withValues(alpha: 0.25),
+                          Colors.transparent,
+                          AppTheme.darkBackground.withValues(alpha: 0.75),
+                          AppTheme.darkBackground,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // 2. Main Ergonomic Dashboard Content
+          // 2. Main Scrollable Liquid Glass Interface
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top Campus Status Pill Bar
+                  // Top Floating Liquid Glass Status Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: AppTheme.surfaceBorder,
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF15803D).withValues(alpha: 0.08),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
+                      GlassContainer(
+                        borderRadius: AppTheme.radiusXL,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        opacity: 0.82,
+                        blur: AppTheme.blurSmall,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -81,154 +80,170 @@ class HomeScreen extends StatelessWidget {
                               width: 8,
                               height: 8,
                               decoration: const BoxDecoration(
-                                color: AppTheme.accentLime,
+                                color: AppTheme.leafGreen,
                                 shape: BoxShape.circle,
                               ),
                             ),
                             const SizedBox(width: 8),
                             const Text(
-                              'Godrej Campus',
+                              'Western Ghats Region',
                               style: TextStyle(
-                                color: AppTheme.accentLime,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryForest,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppTheme.surfaceBorder,
+                      const GlassContainer(
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        opacity: 0.82,
+                        blur: AppTheme.blurSmall,
+                        padding: EdgeInsets.zero,
+                        child: Center(
+                          child: Icon(
+                            Icons.person_outline_rounded,
+                            color: AppTheme.primaryForest,
+                            size: 22,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF15803D).withValues(alpha: 0.08),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.person_outline_rounded,
-                          color: AppTheme.accentLime,
-                          size: 22,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 28),
 
-                  // Headline & Subtitle
-                  Text(
-                    'FIELD INTELLIGENCE',
-                    style: GoogleFonts.syne(
-                      color: AppTheme.accentLime,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.8,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Discover What's\nGrowing Around You",
-                    style: GoogleFonts.syne(
-                      color: AppTheme.textPrimary,
-                      fontSize: 30,
+                  const SizedBox(height: 36),
+
+                  // Hero Title & Description
+                  const Text(
+                    "Discover India's\nNative Flora",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 34,
                       fontWeight: FontWeight.w800,
-                      height: 1.15,
+                      letterSpacing: -1.0,
+                      height: 1.12,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black38,
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    "AI-powered plant identification & real-time conservation data for India's native flora.",
-                    style: GoogleFonts.dmSans(
-                      color: AppTheme.textSecondary,
-                      fontSize: 14,
-                      height: 1.45,
+                    "Identify, explore and understand the plants around you with field AI.",
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      height: 1.4,
+                      shadows: const [
+                        Shadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 24),
 
-                  // Stats Row Cards
-                  Row(
-                    children: [
-                      _buildStatCard('12', 'Native Species'),
-                      const SizedBox(width: 10),
-                      _buildStatCard('3', 'Endangered'),
-                      const SizedBox(width: 10),
-                      _buildStatCard('48', 'Observations'),
-                    ],
+                  const SizedBox(height: 32),
+
+                  // PRIMARY LIQUID GLASS CTA [ Identify a Plant ]
+                  GlassButton(
+                    label: 'Identify a Plant',
+                    icon: Icons.camera_alt_rounded,
+                    width: double.infinity,
+                    height: 56,
+                    variant: GlassButtonVariant.primary,
+                    onPressed: onOpenScanner,
                   ),
+
                   const SizedBox(height: 24),
 
-                  // Ergonomic Quick Action Cards
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildFeatureCard(
-                          icon: Icons.eco_rounded,
-                          title: 'Plant Catalog',
-                          subtitle: 'Browse 12 species',
+                  // Secondary Floating Quick Action Pills
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        _buildQuickActionPill(
+                          icon: Icons.auto_stories_rounded,
+                          label: 'Explore Flora',
                           onTap: () => onNavigateTab(2),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildFeatureCard(
-                          icon: Icons.chat_bubble_outline_rounded,
-                          title: 'Ask AI Guide',
-                          subtitle: 'Gemini expert',
+                        const SizedBox(width: 10),
+                        _buildQuickActionPill(
+                          icon: Icons.map_rounded,
+                          label: 'Nature Map',
+                          onTap: () => onNavigateTab(2),
+                        ),
+                        const SizedBox(width: 10),
+                        _buildQuickActionPill(
+                          icon: Icons.collections_bookmark_rounded,
+                          label: 'My Discoveries',
+                          onTap: () => onNavigateTab(3),
+                        ),
+                        const SizedBox(width: 10),
+                        _buildQuickActionPill(
+                          icon: Icons.auto_awesome_rounded,
+                          label: 'Ask AI Guide',
                           onTap: () => onNavigateTab(4),
                         ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // PRIMARY ERGONOMIC CTA (Bottom Thumb Reach Zone)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: ElevatedButton(
-                      onPressed: onOpenScanner,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accentLime,
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: AppTheme.accentLime.withValues(alpha: 0.3),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Scan a Plant',
-                            style: GoogleFonts.syne(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.center_focus_strong_rounded,
-                            size: 22,
-                            color: Colors.white,
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+
+                  const SizedBox(height: 32),
+
+                  // Solid Surface Biodiversity Overview
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: AppTheme.solidCardDecoration,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Field Intelligence Overview',
+                              style: TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            Icon(
+                              Icons.north_east_rounded,
+                              size: 18,
+                              color: AppTheme.textSecondary.withValues(alpha: 0.6),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            _buildStatItem('12', 'Native Species'),
+                            _buildDivider(),
+                            _buildStatItem('3', 'Endangered'),
+                            _buildDivider(),
+                            _buildStatItem('48', 'Observations'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 100), // Spacing for floating bottom bar
                 ],
               ),
             ),
@@ -238,109 +253,71 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String number, String label) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppTheme.surfaceBorder,
-            width: 1.2,
+  Widget _buildQuickActionPill({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GlassContainer(
+      opacityColor: Colors.white,
+      opacity: 0.85,
+      blur: AppTheme.blurMedium,
+      borderRadius: AppTheme.radiusXL,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: AppTheme.primaryForest),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.primaryForest,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF15803D).withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              number,
-              style: GoogleFonts.syne(
-                color: AppTheme.accentLime,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.dmSans(
-                color: AppTheme.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildFeatureCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: AppTheme.surfaceBorder,
-            width: 1.2,
+  Widget _buildStatItem(String number, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            number,
+            style: const TextStyle(
+              color: AppTheme.primaryForest,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF15803D).withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: AppTheme.accentLime.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: AppTheme.accentLime, size: 22),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              title,
-              style: GoogleFonts.syne(
-                color: AppTheme.textPrimary,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              style: GoogleFonts.dmSans(
-                color: AppTheme.textSecondary,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      width: 1,
+      height: 32,
+      color: AppTheme.surfaceBorder,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 }

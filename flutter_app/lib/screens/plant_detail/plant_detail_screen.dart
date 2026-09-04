@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/plant.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/conservation_badge.dart';
+import '../../widgets/glass/glass_badge.dart';
+import '../../widgets/glass/glass_button.dart';
+import '../../widgets/glass/glass_container.dart';
+import '../../widgets/glass/glass_icon_button.dart';
 import '../ar/ar_view_screen.dart';
 import '../chatbot/chatbot_screen.dart';
 
@@ -29,9 +31,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     final plant = widget.plant;
 
     final sections = [
-      {'key': 'description', 'label': 'Description', 'content': plant.description},
+      {'key': 'description', 'label': 'Botanical Description', 'content': plant.description},
       {'key': 'ecological', 'label': 'Ecological Importance', 'content': plant.ecologicalImportance},
-      {'key': 'threats', 'label': 'Threats', 'content': plant.threats},
+      {'key': 'threats', 'label': 'Ecological Threats', 'content': plant.threats},
       {'key': 'conservation', 'label': 'Conservation Actions', 'content': plant.conservationActions},
     ];
 
@@ -41,20 +43,16 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         children: [
           CustomScrollView(
             slivers: [
-              // Hero Image with Gradient
+              // Hero Image Header
               SliverAppBar(
-                expandedHeight: 260,
+                expandedHeight: 320,
                 pinned: true,
                 backgroundColor: AppTheme.darkBackground,
-                leading: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0x990D1410),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.surfaceBorder),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GlassIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    iconColor: AppTheme.textPrimary,
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -63,26 +61,28 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                     fit: StackFit.expand,
                     children: [
                       Image.network(
-                        plant.imageUrl ?? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800',
+                        plant.imageUrl ?? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1000',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(color: AppTheme.primaryForest);
                         },
                       ),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            stops: [0.2, 0.98],
-                            colors: [
-                              Color(0x330D1410),
-                              Color(0xF50D1410),
-                            ],
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              stops: const [0.2, 0.75, 1.0],
+                              colors: [
+                                Colors.black.withValues(alpha: 0.30),
+                                Colors.black.withValues(alpha: 0.10),
+                                AppTheme.darkBackground,
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      // Title on Image
                       Positioned(
                         bottom: 16,
                         left: 20,
@@ -90,27 +90,44 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                GlassBadge(
+                                  label: 'Native • ${plant.nativeRegion}',
+                                  icon: Icons.place_rounded,
+                                  color: AppTheme.primaryForest,
+                                ),
+                                GlassBadge(
+                                  label: plant.conservationStatus,
+                                  icon: Icons.shield_outlined,
+                                  color: AppTheme.amberAccent,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
                             Text(
                               plant.commonName,
-                              style: GoogleFonts.syne(
-                                color: Colors.white,
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                height: 1.15,
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.8,
+                                height: 1.12,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
                             Text(
                               plant.scientificName,
-                              style: GoogleFonts.dmSans(
-                                color: AppTheme.accentLime,
-                                fontSize: 14,
+                              style: const TextStyle(
+                                color: AppTheme.accentForest,
+                                fontSize: 16,
                                 fontStyle: FontStyle.italic,
                                 fontWeight: FontWeight.w600,
+                                letterSpacing: -0.2,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            ConservationBadge(status: plant.conservationStatus, isMedium: true),
                           ],
                         ),
                       ),
@@ -119,63 +136,66 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 ),
               ),
 
-              // Scrollable Details
+              // Detail Content Surface
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Info Chips Row
-                      Row(
-                        children: [
-                          _buildInfoChip(Icons.category_outlined, 'FAMILY', plant.family),
-                          const SizedBox(width: 8),
-                          _buildInfoChip(Icons.public_outlined, 'REGION', plant.nativeRegion),
-                          const SizedBox(width: 8),
-                          _buildInfoChip(Icons.forest_outlined, 'HABITAT', plant.habitat),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+                  child: Container(
+                    decoration: AppTheme.solidCardDecoration,
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _buildSpecColumn('FAMILY', plant.family),
+                            _buildSpecColumn('HABITAT', plant.habitat),
+                            _buildSpecColumn('REGION', plant.nativeRegion),
+                          ],
+                        ),
 
-                      // Accordion Sections
-                      ...sections.map((sec) {
-                        final key = sec['key'] as String;
-                        final label = sec['label'] as String;
-                        final content = sec['content'] as String;
-                        final isExpanded = _expandedKey == key;
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Divider(color: AppTheme.surfaceBorder, height: 1),
+                        ),
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceCard,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppTheme.surfaceBorder),
-                          ),
-                          child: Column(
+                        ...sections.map((sec) {
+                          final key = sec['key'] as String;
+                          final label = sec['label'] as String;
+                          final content = sec['content'] as String;
+                          final isExpanded = _expandedKey == key;
+
+                          return Column(
                             children: [
                               InkWell(
                                 onTap: () => _toggleSection(key),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(12),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.eco, color: AppTheme.accentLime, size: 16),
+                                      const Icon(
+                                        Icons.eco_rounded,
+                                        color: AppTheme.accentForest,
+                                        size: 18,
+                                      ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
                                           label,
-                                          style: GoogleFonts.syne(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
+                                          style: const TextStyle(
+                                            color: AppTheme.textPrimary,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: -0.2,
                                           ),
                                         ),
                                       ),
                                       Icon(
-                                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                        color: AppTheme.sageText,
+                                        isExpanded
+                                            ? Icons.keyboard_arrow_up_rounded
+                                            : Icons.keyboard_arrow_down_rounded,
+                                        color: AppTheme.textSecondary,
                                         size: 20,
                                       ),
                                     ],
@@ -184,151 +204,117 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                               ),
                               if (isExpanded)
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                  padding: const EdgeInsets.only(left: 28, bottom: 12),
                                   child: Text(
                                     content,
-                                    style: GoogleFonts.dmSans(
+                                    style: const TextStyle(
                                       color: AppTheme.textSecondary,
-                                      fontSize: 13,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
                                       height: 1.5,
                                     ),
                                   ),
                                 ),
+                              const Divider(color: AppTheme.surfaceBorder, height: 1),
+                            ],
+                          );
+                        }),
+
+                        const SizedBox(height: 16),
+
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppTheme.mistBackground,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                            border: Border.all(color: AppTheme.surfaceBorder),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(
+                                    Icons.nature_people_rounded,
+                                    color: AppTheme.primaryForest,
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Field Identification Characteristics',
+                                    style: TextStyle(
+                                      color: AppTheme.primaryForest,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                plant.identificationFeatures,
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 13,
+                                  height: 1.45,
+                                ),
+                              ),
                             ],
                           ),
-                        );
-                      }),
-
-                      const SizedBox(height: 8),
-
-                      // Did You Know Card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0x14E8A030), // rgba(232,160,48,0.08)
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0x40E8A030), width: 1),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Text('✨', style: TextStyle(fontSize: 16)),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Did You Know / Identification Feature',
-                                  style: GoogleFonts.syne(
-                                    color: AppTheme.amberAccent,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              plant.identificationFeatures,
-                              style: GoogleFonts.dmSans(
-                                color: const Color(0xFFD4AA70),
-                                fontSize: 13,
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ],
           ),
 
-          // Sticky Bottom Bar
+          // Floating Action Bar
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xF20D1410),
-                border: Border(
-                  top: BorderSide(
-                    color: AppTheme.accentLime.withValues(alpha: 0.15),
-                    width: 1,
+            bottom: 24,
+            left: 20,
+            right: 20,
+            child: GlassContainer(
+              borderRadius: AppTheme.radiusXL,
+              opacityColor: Colors.white,
+              opacity: 0.90,
+              blur: AppTheme.blurMedium,
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GlassButton(
+                      label: 'View in AR',
+                      icon: Icons.view_in_ar_rounded,
+                      variant: GlassButtonVariant.primary,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ARViewScreen(plant: plant),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ARViewScreen(plant: plant),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.accentLime,
-                            foregroundColor: AppTheme.darkBackground,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 2,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Ask AI Guide',
+                      icon: Icons.auto_awesome_rounded,
+                      variant: GlassButtonVariant.secondary,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatbotScreen(initialPlant: plant),
                           ),
-                          child: Text(
-                            'View in AR',
-                            style: GoogleFonts.syne(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0D1410),
-                            ),
-                          ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatbotScreen(initialPlant: plant),
-                              ),
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppTheme.surfaceBorder),
-                            backgroundColor: AppTheme.surfaceCard,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            'Ask AI Guide',
-                            style: GoogleFonts.syne(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.accentLime,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -337,42 +323,32 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label, String value) {
+  Widget _buildSpecColumn(String label, String value) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.surfaceBorder),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppTheme.sageText, size: 16),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.dmSans(
-                color: AppTheme.sageText,
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.8,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.textMuted,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
             ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.dmSans(
-                color: AppTheme.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

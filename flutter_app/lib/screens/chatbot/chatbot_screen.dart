@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/chat_message.dart';
 import '../../models/plant.dart';
 import '../../services/chat_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/glass/glass_container.dart';
+import '../../widgets/glass/glass_icon_button.dart';
 
 class ChatbotScreen extends StatefulWidget {
   final Plant? initialPlant;
@@ -29,17 +30,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final plant = widget.initialPlant;
     if (plant != null) {
       _suggestedQuestions = [
-        'Why is ${plant.commonName} important?',
-        'What threats does it face?',
-        'How can I help conserve it?',
-        'How to identify in the wild?',
+        'How do I identify ${plant.commonName}?',
+        'Is it native to my region?',
+        'Why is it ecologically important?',
+        'Can I grow it at home?',
       ];
     } else {
       _suggestedQuestions = [
-        'What plants are endangered?',
-        'Tell me about Western Ghats flora',
-        'Best time to spot orchids in India?',
-        'What are keystone species in India?',
+        'What species are native to Western Ghats?',
+        'How do I identify native Banyan trees?',
+        'Why are keystone species vital in India?',
+        'How can I restore native flora?',
       ];
     }
 
@@ -47,8 +48,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         text: plant != null
-            ? 'Hello! I am your Botanical Guide, powered by **Gemini AI**. I see you are inquiring about **${plant.commonName}** (*${plant.scientificName}*). What ecological role, habitat detail, or conservation action would you like to explore?'
-            : 'Hello! I am your Field Intelligence Botanical Guide. Ask me anything about India\'s native plant species, Western Ghats flora, ecological restoration, or species identification. 🌿',
+            ? 'Welcome. I am your AI Botanical Assistant. I see you are inquiring about **${plant.commonName}** (*${plant.scientificName}*). How can I assist your field exploration?'
+            : 'Welcome. I am your AI Botanical Assistant for India\'s native flora and biodiversity. What would you like to explore today?',
         isUser: false,
         timestamp: DateTime.now(),
         plantName: plant?.commonName,
@@ -103,7 +104,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           _messages.add(
             ChatMessage(
               id: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
-              text: 'The Botanical Guide is operating in offline mode. Please ensure the backend server is running.',
+              text: 'Operating in offline mode. Please ensure backend service is connected.',
               isUser: false,
               timestamp: DateTime.now(),
             ),
@@ -120,8 +121,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
         );
       }
     });
@@ -136,14 +137,21 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         spans.add(
           TextSpan(
             text: part.substring(2, part.length - 2),
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
           ),
         );
       } else if (part.startsWith('*') && part.endsWith('*')) {
         spans.add(
           TextSpan(
             text: part.substring(1, part.length - 1),
-            style: const TextStyle(fontStyle: FontStyle.italic, color: AppTheme.accentLime),
+            style: const TextStyle(
+              fontStyle: FontStyle.italic,
+              color: AppTheme.accentForest,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         );
       } else {
@@ -151,8 +159,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           TextSpan(
             text: part,
             style: TextStyle(
-              color: isUser ? AppTheme.textSecondary : const Color(0xFFE2E8F0),
-              height: 1.45,
+              color: isUser ? AppTheme.textPrimary : AppTheme.textSecondary,
+              height: 1.5,
             ),
           ),
         );
@@ -162,7 +170,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     return RichText(
       text: TextSpan(
         children: spans,
-        style: GoogleFonts.dmSans(fontSize: 13.5),
+        style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w400),
       ),
     );
   }
@@ -174,164 +182,67 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Ergonomic Header Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xF2070E09),
-                border: Border(
-                  bottom: BorderSide(
-                    color: AppTheme.accentLime.withValues(alpha: 0.15),
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'AI Botanical Guide',
-                          style: GoogleFonts.syne(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              'Powered by Gemini AI',
-                              style: GoogleFonts.dmSans(
-                                color: AppTheme.sageText,
-                                fontSize: 11,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                color: AppTheme.accentLime,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.initialPlant != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        widget.initialPlant!.imageUrl ?? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=100',
-                        width: 36,
-                        height: 36,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.eco, color: AppTheme.accentLime),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            // Messages Stream
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final msg = _messages[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: Row(
-                      mainAxisAlignment:
-                          msg.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (!msg.isUser) ...[
-                          Container(
-                            width: 34,
-                            height: 34,
-                            margin: const EdgeInsets.only(right: 8, top: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF132A1C),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppTheme.accentLime.withValues(alpha: 0.3)),
-                            ),
-                            child: const Icon(Icons.eco_rounded, color: AppTheme.accentLime, size: 18),
-                          ),
-                        ],
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: msg.isUser
-                                  ? AppTheme.accentLime.withValues(alpha: 0.15)
-                                  : const Color(0xD9070E09),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: msg.isUser
-                                    ? AppTheme.accentLime.withValues(alpha: 0.4)
-                                    : AppTheme.surfaceBorder,
-                              ),
-                            ),
-                            child: _renderFormattedText(msg.text, msg.isUser),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // Thinking Indicator
-            if (_isSending)
-              Padding(
-                padding: const EdgeInsets.only(left: 20, bottom: 8),
+            // Top Floating Liquid Glass Navigation Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: GlassContainer(
+                borderRadius: AppTheme.radiusXL,
+                opacityColor: Colors.white,
+                opacity: 0.88,
+                blur: AppTheme.blurMedium,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 child: Row(
                   children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF132A1C),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.eco, color: AppTheme.accentLime, size: 14),
+                    GlassIconButton(
+                      icon: Icons.arrow_back_rounded,
+                      size: 38,
+                      iconSize: 20,
+                      onPressed: () => Navigator.maybePop(context),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceCard,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppTheme.surfaceBorder),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            width: 12,
-                            height: 12,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppTheme.accentLime,
+                          const Text(
+                            'AI Botanical Assistant',
+                            style: TextStyle(
+                              color: AppTheme.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
                             ),
                           ),
-                          SizedBox(width: 8),
                           Text(
-                            'Consulting Gemini AI Guide...',
-                            style: TextStyle(color: AppTheme.accentLime, fontSize: 11, fontWeight: FontWeight.bold),
+                            widget.initialPlant != null
+                                ? widget.initialPlant!.commonName
+                                : 'India Biodiversity Intelligence',
+                            style: const TextStyle(
+                              color: AppTheme.accentForest,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.softSage,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.auto_awesome_rounded, size: 14, color: AppTheme.primaryForest),
+                          SizedBox(width: 4),
+                          Text(
+                            'Gemini',
+                            style: TextStyle(
+                              color: AppTheme.primaryForest,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
@@ -339,97 +250,176 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   ],
                 ),
               ),
+            ),
 
-            // Suggestions Chips (Scrollable, Thumb-accessible)
+            // Clean Assistant Conversation Surface
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final msg = _messages[index];
+
+                  if (msg.isUser) {
+                    return Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16, left: 40),
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.softSage,
+                          borderRadius: BorderRadius.circular(20).copyWith(
+                            bottomRight: const Radius.circular(4),
+                          ),
+                          border: Border.all(color: AppTheme.surfaceBorder),
+                        ),
+                        child: _renderFormattedText(msg.text, true),
+                      ),
+                    );
+                  }
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 20, right: 20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          margin: const EdgeInsets.only(right: 12, top: 2),
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primaryForest,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.auto_awesome_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: AppTheme.solidCardDecoration,
+                            child: _renderFormattedText(msg.text, false),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Thinking State Indicator
+            if (_isSending)
+              Padding(
+                padding: const EdgeInsets.only(left: 20, bottom: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primaryForest,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 14),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Analyzing botanical data...',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Suggested Prompts Horizontal Pills
             SizedBox(
               height: 38,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 itemCount: _suggestedQuestions.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final text = _suggestedQuestions[index];
-                  return InkWell(
+                  return GlassContainer(
+                    opacityColor: Colors.white,
+                    opacity: 0.88,
+                    blur: AppTheme.blurSmall,
+                    borderRadius: AppTheme.radiusXL,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     onTap: () => _handleSubmitted(text),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xD9070E09),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.accentLime.withValues(alpha: 0.25)),
-                      ),
-                      child: Text(
-                        text,
-                        style: GoogleFonts.dmSans(
-                          color: AppTheme.sageText,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    child: Text(
+                      text,
+                      style: const TextStyle(
+                        color: AppTheme.primaryForest,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.1,
                       ),
                     ),
                   );
                 },
               ),
             ),
+
             const SizedBox(height: 10),
 
-            // ERGONOMIC THUMB INPUT BAR
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xF5070E09),
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                          color: AppTheme.accentLime.withValues(alpha: 0.3),
-                          width: 1.2,
+            // Floating Liquid Glass Input Bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+              child: GlassContainer(
+                height: 56,
+                borderRadius: AppTheme.radiusXL,
+                opacityColor: Colors.white,
+                opacity: 0.90,
+                blur: AppTheme.blurMedium,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        style: const TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextField(
-                              controller: _textController,
-                              style: const TextStyle(color: Colors.white, fontSize: 14.5),
-                              decoration: const InputDecoration(
-                                hintText: 'Ask about any native plant...',
-                                hintStyle: TextStyle(color: AppTheme.sageText, fontSize: 13.5),
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                              onSubmitted: _handleSubmitted,
-                            ),
+                        decoration: const InputDecoration(
+                          hintText: 'Ask anything about native plants...',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 14.5,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Material(
-                              color: AppTheme.accentLime,
-                              shape: const CircleBorder(),
-                              child: InkWell(
-                                onTap: () => _handleSubmitted(_textController.text),
-                                customBorder: const CircleBorder(),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(10.0),
-                                  child: Icon(
-                                    Icons.send_rounded,
-                                    color: Color(0xFF070E09),
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                        onSubmitted: _handleSubmitted,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    GlassIconButton(
+                      icon: Icons.arrow_upward_rounded,
+                      size: 40,
+                      iconSize: 20,
+                      opacityColor: AppTheme.primaryForest,
+                      iconColor: Colors.white,
+                      onPressed: () => _handleSubmitted(_textController.text),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

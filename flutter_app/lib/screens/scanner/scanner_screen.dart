@@ -1,13 +1,14 @@
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/identification.dart';
 import '../../models/plant.dart';
 import '../../services/api_service.dart';
 import '../../services/identification_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/glass/glass_container.dart';
+import '../../widgets/glass/glass_icon_button.dart';
 import '../ar/ar_view_screen.dart';
 import 'identification_result_screen.dart';
 
@@ -24,19 +25,15 @@ class _ScannerScreenState extends State<ScannerScreen>
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
   bool _isLoading = false;
-  String _loadingText = 'Align plant within reticle & tap capture';
+  String _loadingText = 'Point camera at leaf or flower';
   String? _errorMessage;
   List<Plant> _recentPlants = [];
-  late AnimationController _pulseController;
+  bool _isFlashOn = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
     _initCamera();
     _loadRecentPlants();
   }
@@ -69,7 +66,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         );
         final controller = CameraController(
           backCamera,
-          ResolutionPreset.medium,
+          ResolutionPreset.high,
           enableAudio: false,
         );
         _cameraController = controller;
@@ -99,9 +96,19 @@ class _ScannerScreenState extends State<ScannerScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _pulseController.dispose();
     _cameraController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleFlash() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) return;
+    try {
+      final newMode = _isFlashOn ? FlashMode.off : FlashMode.torch;
+      await _cameraController!.setFlashMode(newMode);
+      setState(() {
+        _isFlashOn = !_isFlashOn;
+      });
+    } catch (_) {}
   }
 
   Future<void> _captureFromCamera() async {
@@ -148,7 +155,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       if (image == null) {
         setState(() {
           _isLoading = false;
-          _loadingText = 'Align plant within reticle & tap capture';
+          _loadingText = 'Point camera at leaf or flower';
         });
         return;
       }
@@ -161,7 +168,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');
-        _loadingText = 'Align plant within reticle & tap capture';
+        _loadingText = 'Point camera at leaf or flower';
       });
     }
   }
@@ -169,7 +176,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   Future<void> _identifyBytes(Uint8List bytes, String filename) async {
     if (!mounted) return;
     setState(() {
-      _loadingText = 'Analyzing via Gemini AI Vision...';
+      _loadingText = 'Examining leaf structure & AI features...';
     });
 
     try {
@@ -181,7 +188,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _loadingText = 'Align plant within reticle & tap capture';
+        _loadingText = 'Point camera at leaf or flower';
       });
 
       Navigator.push(
@@ -198,7 +205,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');
-        _loadingText = 'Align plant within reticle & tap capture';
+        _loadingText = 'Point camera at leaf or flower';
       });
     }
   }
@@ -237,370 +244,239 @@ class _ScannerScreenState extends State<ScannerScreen>
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1. Live Camera Viewfinder or Fallback Backdrop
+          // 1. Full Screen Camera View
           Positioned.fill(
             child: _isCameraInitialized &&
                     _cameraController != null &&
                     _cameraController!.value.isInitialized
                 ? CameraPreview(_cameraController!)
                 : Image.network(
-                    'https://images.unsplash.com/photo-1700592478407-3981353caecb?w=600&h=900&fit=crop&auto=format',
+                    'https://images.unsplash.com/photo-1700592478407-3981353caecb?w=800&h=1200&fit=crop&auto=format',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
-                      return Container(color: AppTheme.darkBackground);
+                      return Container(color: AppTheme.primaryForest);
                     },
                   ),
           ),
+
           Positioned.fill(
             child: Container(
-              color: const Color(0x55070E09),
+              color: Colors.black.withValues(alpha: 0.15),
             ),
           ),
 
-          // 2. Top Header Bar
+          // 2. Floating Liquid Glass Top Header
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xB2070E09),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.surfaceBorder),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                      onPressed: () => Navigator.pop(context),
+                  GlassIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    iconColor: AppTheme.textPrimary,
+                    onPressed: () => Navigator.maybePop(context),
+                  ),
+                  const GlassContainer(
+                    borderRadius: AppTheme.radiusXL,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    opacity: 0.82,
+                    blur: AppTheme.blurMedium,
+                    child: Text(
+                      'Native Plant Scanner',
+                      style: TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
                     ),
                   ),
-                  Text(
-                    'Plant Scanner',
-                    style: GoogleFonts.syne(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xB2070E09),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.accentLime.withValues(alpha: 0.4)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.accentLime,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'Gemini AI',
-                          style: TextStyle(
-                            color: AppTheme.accentLime,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                  GlassIconButton(
+                    icon: _isFlashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+                    iconColor: _isFlashOn ? AppTheme.amberAccent : AppTheme.textPrimary,
+                    onPressed: _toggleFlash,
                   ),
                 ],
               ),
             ),
           ),
 
-          // 3. Animated Reticle in Center
+          // 3. Calm Biological Recognition Feedback Ring (Center Viewfinder)
           Center(
-            child: AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                final scale = 1.0 + (_pulseController.value * 0.07);
-                return Transform.scale(
-                  scale: scale,
-                  child: SizedBox(
-                    width: 220,
-                    height: 220,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: 220,
-                          height: 220,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppTheme.accentLime.withValues(alpha: 0.25),
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 175,
-                          height: 175,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppTheme.accentLime.withValues(alpha: 0.45),
-                              width: 1.2,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppTheme.accentLime.withValues(alpha: 0.75),
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.accentLime,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.accentLime,
-                                blurRadius: 10,
-                                spreadRadius: 3,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+            child: SizedOverflowBox(
+              size: const Size(240, 240),
+              child: Container(
+                width: 240,
+                height: 240,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryForest.withValues(alpha: 0.15),
+                      blurRadius: 30,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Container(
+                    width: 210,
+                    height: 210,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppTheme.leafGreen.withValues(alpha: 0.5),
+                        width: 1.0,
+                      ),
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
 
-          // 4. Status Banner below Reticle
+          // 4. Floating Glass "Plant Detected" Status Indicator
           Align(
-            alignment: const Alignment(0, 0.38),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xD9070E09),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.surfaceBorder),
-              ),
+            alignment: const Alignment(0, 0.42),
+            child: GlassContainer(
+              borderRadius: AppTheme.radiusXL,
+              opacity: 0.88,
+              blur: AppTheme.blurMedium,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               child: _isLoading
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const SizedBox(
-                          width: 14,
-                          height: 14,
+                          width: 16,
+                          height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppTheme.accentLime,
+                            color: AppTheme.accentForest,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Text(
                           _loadingText,
-                          style: GoogleFonts.dmSans(
-                            color: AppTheme.accentLime,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                          style: const TextStyle(
+                            color: AppTheme.primaryForest,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
                     )
-                  : Text(
-                      _loadingText,
-                      style: GoogleFonts.dmSans(
-                        color: AppTheme.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.leafGreen,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _loadingText,
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
             ),
           ),
 
-          // 5. Error banner if any
+          // Error Banner
           if (_errorMessage != null)
             Align(
-              alignment: const Alignment(0, 0.50),
+              alignment: const Alignment(0, 0.54),
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 24),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xCC7F1D1D),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0x80EF4444)),
                 ),
                 child: Text(
                   _errorMessage!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ),
             ),
 
-          // 6. ERGONOMIC BOTTOM CONTROL DOCK (Natural Thumb Reach Zone)
+          // 5. Floating Liquid Glass Shutter & Action Controls (Bottom Dock)
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-              decoration: BoxDecoration(
-                color: const Color(0xF2070E09),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                border: Border.all(
-                  color: AppTheme.accentLime.withValues(alpha: 0.18),
-                  width: 1.2,
-                ),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Drawer pill handle
-                    Container(
-                      width: 40,
-                      height: 4,
+            bottom: 32,
+            left: 20,
+            right: 20,
+            child: GlassContainer(
+              borderRadius: AppTheme.radiusXL,
+              opacityColor: Colors.white,
+              opacity: 0.88,
+              blur: AppTheme.blurLarge,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  // Gallery Picker
+                  GlassIconButton(
+                    icon: Icons.photo_library_rounded,
+                    iconColor: AppTheme.primaryForest,
+                    onPressed: _isLoading ? () {} : () => _pickAndIdentify(ImageSource.gallery),
+                    tooltip: 'Gallery',
+                  ),
+
+                  // PRIMARY SHUTTER BUTTON
+                  GestureDetector(
+                    onTap: _isLoading ? null : _captureFromCamera,
+                    child: Container(
+                      width: 72,
+                      height: 72,
                       decoration: BoxDecoration(
-                        color: AppTheme.sageText.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(4),
+                        shape: BoxShape.circle,
+                        color: AppTheme.primaryForest,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryForest.withValues(alpha: 0.35),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 3.5,
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.camera_alt_rounded,
+                          color: Colors.white,
+                          size: 32,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                  ),
 
-                    // Ergonomic Shutter Controls Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // 1. Gallery Button (Left Thumb Access)
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: _isLoading ? null : () => _pickAndIdentify(ImageSource.gallery),
-                                borderRadius: BorderRadius.circular(24),
-                                child: Container(
-                                  width: 54,
-                                  height: 54,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xCC132A1C),
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                      color: AppTheme.accentLime.withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.photo_library_outlined,
-                                    color: AppTheme.accentLime,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Gallery',
-                              style: GoogleFonts.dmSans(
-                                color: AppTheme.textSecondary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // 2. PRIMARY SHUTTER BUTTON (Center - Primary Ergonomic Action)
-                        GestureDetector(
-                          onTap: _isLoading ? null : _captureFromCamera,
-                          child: Container(
-                            width: 76,
-                            height: 76,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppTheme.accentLime,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.accentLime.withValues(alpha: 0.45),
-                                  blurRadius: 18,
-                                  spreadRadius: 3,
-                                ),
-                              ],
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.6),
-                                width: 3,
-                              ),
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.camera_alt_rounded,
-                                color: Color(0xFF070E09),
-                                size: 36,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // 3. Live AR Mode Button (Right Thumb Access)
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: _openARMode,
-                                borderRadius: BorderRadius.circular(24),
-                                child: Container(
-                                  width: 54,
-                                  height: 54,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xCC132A1C),
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                      color: AppTheme.accentLime.withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.view_in_ar_rounded,
-                                    color: AppTheme.accentLime,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'AR Mode',
-                              style: GoogleFonts.dmSans(
-                                color: AppTheme.textSecondary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  // Live AR Mode Button
+                  GlassIconButton(
+                    icon: Icons.view_in_ar_rounded,
+                    iconColor: AppTheme.primaryForest,
+                    onPressed: _openARMode,
+                    tooltip: 'AR Mode',
+                  ),
+                ],
               ),
             ),
           ),

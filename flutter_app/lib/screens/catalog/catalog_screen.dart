@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/plant.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/glass/glass_container.dart';
+import '../../widgets/glass/glass_search_bar.dart';
 import '../../widgets/plant_card.dart';
 import '../plant_detail/plant_detail_screen.dart';
 
@@ -22,9 +23,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   final List<String> _filters = [
     "All",
-    "Least Concern",
-    "Vulnerable",
-    "Threatened",
+    "Western Ghats",
+    "Medicinal",
+    "Keystone Trees",
     "Endangered",
   ];
 
@@ -56,13 +57,30 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   List<Plant> get _filteredPlants {
     return _plants.where((p) {
-      final matchFilter = _selectedFilter == "All" ||
-          p.conservationStatus.toLowerCase() == _selectedFilter.toLowerCase();
+      bool matchFilter = true;
+      if (_selectedFilter == "Endangered") {
+        matchFilter = p.conservationStatus.toLowerCase().contains("endangered") ||
+            p.conservationStatus.toLowerCase().contains("vulnerable");
+      } else if (_selectedFilter == "Keystone Trees") {
+        matchFilter = p.commonName.toLowerCase().contains("tree") ||
+            p.description.toLowerCase().contains("tree") ||
+            p.habitat.toLowerCase().contains("forest");
+      } else if (_selectedFilter == "Medicinal") {
+        matchFilter = p.description.toLowerCase().contains("medicinal") ||
+            p.ecologicalImportance.toLowerCase().contains("medicinal") ||
+            p.commonName.toLowerCase().contains("neem");
+      } else if (_selectedFilter == "Western Ghats") {
+        matchFilter = p.nativeRegion.toLowerCase().contains("ghats") ||
+            p.nativeRegion.toLowerCase().contains("india") ||
+            p.nativeRegion.toLowerCase().contains("maharashtra");
+      }
+
       final query = _searchController.text.toLowerCase().trim();
       final matchSearch = query.isEmpty ||
           p.commonName.toLowerCase().contains(query) ||
           p.scientificName.toLowerCase().contains(query) ||
           p.family.toLowerCase().contains(query);
+
       return matchFilter && matchSearch;
     }).toList();
   }
@@ -79,52 +97,52 @@ class _CatalogScreenState extends State<CatalogScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+              // Large Apple Headline
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Plant Catalog',
-                    style: GoogleFonts.syne(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Explore Native Flora',
+                        style: TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.8,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Indian flora & ecosystem keystone species',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    'Godrej Campus',
-                    style: GoogleFonts.dmSans(
-                      color: AppTheme.sageText,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${_plants.length} Native Species · Updated today',
-                    style: GoogleFonts.dmSans(
-                      color: AppTheme.sageText,
-                      fontSize: 13,
-                    ),
-                  ),
-                  InkWell(
+                  GlassContainer(
+                    borderRadius: AppTheme.radiusXL,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    opacityColor: Colors.white,
+                    opacity: 0.88,
+                    blur: AppTheme.blurSmall,
                     onTap: () => _fetchCatalog(query: _searchController.text),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.sync, color: AppTheme.accentLime, size: 14),
+                        Icon(Icons.sync_rounded, color: AppTheme.primaryForest, size: 16),
                         SizedBox(width: 4),
                         Text(
                           'Sync',
                           style: TextStyle(
-                            color: AppTheme.accentLime,
+                            color: AppTheme.primaryForest,
                             fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -132,48 +150,21 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
 
-              // Search Bar
-              TextField(
+              const SizedBox(height: 16),
+
+              // Floating Liquid Glass Search Bar
+              GlassSearchBar(
                 controller: _searchController,
+                hintText: 'Search native species, scientific name, region...',
                 onChanged: (_) => setState(() {}),
-                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Search by name, scientific name, or family...',
-                  hintStyle: const TextStyle(color: AppTheme.sageText, fontSize: 14),
-                  prefixIcon: const Icon(Icons.search, color: AppTheme.sageText, size: 20),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, color: AppTheme.sageText, size: 18),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {});
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: AppTheme.surfaceCard,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: const BorderSide(color: AppTheme.surfaceBorder),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: const BorderSide(color: AppTheme.surfaceBorder),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: const BorderSide(color: AppTheme.accentLime),
-                  ),
-                ),
               ),
+
               const SizedBox(height: 12),
 
-              // Status Filter Chips
+              // Floating Liquid Glass Filter Pills Row
               SizedBox(
-                height: 34,
+                height: 38,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _filters.length,
@@ -181,80 +172,75 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   itemBuilder: (context, index) {
                     final filter = _filters[index];
                     final isSelected = _selectedFilter == filter;
-                    return InkWell(
+
+                    return GlassContainer(
+                      opacityColor: isSelected ? AppTheme.primaryForest : Colors.white,
+                      opacity: isSelected ? 0.92 : 0.85,
+                      blur: AppTheme.blurSmall,
+                      borderRadius: AppTheme.radiusXL,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppTheme.primaryForest
+                            : AppTheme.surfaceBorder,
+                        width: 1.0,
+                      ),
                       onTap: () {
                         setState(() {
                           _selectedFilter = filter;
                         });
                       },
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppTheme.accentLime : AppTheme.surfaceCard,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppTheme.accentLime
-                                : AppTheme.surfaceBorder,
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          filter,
-                          style: TextStyle(
-                            color: isSelected
-                                ? const Color(0xFF0D1410)
-                                : AppTheme.sageText,
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                          ),
+                      child: Text(
+                        filter,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : AppTheme.primaryForest,
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          letterSpacing: -0.2,
                         ),
                       ),
                     );
                   },
                 ),
               ),
-              const SizedBox(height: 14),
 
-              // Plant List
+              const SizedBox(height: 16),
+
+              // Plant Species Feed
               Expanded(
                 child: _isLoading
                     ? const Center(
-                        child: CircularProgressIndicator(color: AppTheme.accentLime),
+                        child: CircularProgressIndicator(color: AppTheme.accentForest),
                       )
                     : _errorMessage != null
                         ? Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
-                                const SizedBox(height: 12),
+                                const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 44),
+                                const SizedBox(height: 10),
                                 Text(
                                   _errorMessage!,
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(color: AppTheme.textSecondary),
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 14),
                                 ElevatedButton(
                                   onPressed: () => _fetchCatalog(),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.accentLime,
-                                    foregroundColor: AppTheme.darkBackground,
-                                  ),
                                   child: const Text('Retry Connection'),
                                 ),
                               ],
                             ),
                           )
                         : filtered.isEmpty
-                            ? Center(
+                            ? const Center(
                                 child: Text(
-                                  'No native plant species match your search.',
-                                  style: GoogleFonts.dmSans(color: AppTheme.sageText),
+                                  'No native species match your search filter.',
+                                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                                 ),
                               )
                             : ListView.builder(
+                                padding: const EdgeInsets.only(bottom: 90),
                                 itemCount: filtered.length,
                                 itemBuilder: (context, index) {
                                   final plant = filtered[index];

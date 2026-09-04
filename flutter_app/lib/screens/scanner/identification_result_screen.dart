@@ -1,11 +1,13 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/identification.dart';
 import '../../models/plant.dart';
 import '../../services/flora_dex_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/conservation_badge.dart';
+import '../../widgets/glass/glass_badge.dart';
+import '../../widgets/glass/glass_button.dart';
+import '../../widgets/glass/glass_container.dart';
+import '../../widgets/glass/glass_icon_button.dart';
 import '../ar/ar_view_screen.dart';
 import '../chatbot/chatbot_screen.dart';
 
@@ -69,14 +71,6 @@ class _IdentificationResultScreenState extends State<IdentificationResultScreen>
     final displayConservation = plant?.conservationActions ?? 'Preserve native specimen trees and report geo-observations.';
     final displayFeatures = plant?.identificationFeatures ?? ident.details ?? 'Identified from captured botanical leaf and flower structures.';
 
-    final sections = [
-      {'key': 'description', 'label': 'Description', 'content': displayDescription},
-      {'key': 'ecological', 'label': 'Ecological Importance', 'content': displayEcological},
-      {'key': 'threats', 'label': 'Threats', 'content': displayThreats},
-      {'key': 'conservation', 'label': 'How You Can Help', 'content': displayConservation},
-    ];
-
-    // Dummy fallback plant if not directly from DB
     final effectivePlant = plant ??
         Plant(
           id: 0,
@@ -94,53 +88,32 @@ class _IdentificationResultScreenState extends State<IdentificationResultScreen>
           imageUrl: plant?.imageUrl,
         );
 
+    final sections = [
+      {'key': 'description', 'label': 'Botanical Identification', 'content': displayDescription},
+      {'key': 'ecological', 'label': 'Ecological Importance', 'content': displayEcological},
+      {'key': 'threats', 'label': 'Habitat & Conservation Threats', 'content': displayThreats},
+      {'key': 'conservation', 'label': 'Conservation Actions', 'content': displayConservation},
+    ];
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
           CustomScrollView(
             slivers: [
-              // Hero Image Header
+              // Hero Botanical Photography Header
               SliverAppBar(
-                expandedHeight: 260,
+                expandedHeight: 320,
                 pinned: true,
                 backgroundColor: AppTheme.darkBackground,
-                leading: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0x990D1410),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.surfaceBorder),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GlassIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    iconColor: AppTheme.textPrimary,
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
-                actions: [
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.accentLime,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.accentLime.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      '$confidencePct% Match',
-                      style: GoogleFonts.syne(
-                        color: const Color(0xFF0D1410),
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: Stack(
                     fit: StackFit.expand,
@@ -151,19 +124,22 @@ class _IdentificationResultScreenState extends State<IdentificationResultScreen>
                         Image.network(plant!.imageUrl!, fit: BoxFit.cover)
                       else
                         Image.network(
-                          'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800',
+                          'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1000',
                           fit: BoxFit.cover,
                         ),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            stops: [0.2, 0.98],
-                            colors: [
-                              Color(0x330D1410),
-                              Color(0xF50D1410),
-                            ],
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              stops: const [0.2, 0.75, 1.0],
+                              colors: [
+                                Colors.black.withValues(alpha: 0.30),
+                                Colors.black.withValues(alpha: 0.10),
+                                AppTheme.darkBackground,
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -174,27 +150,50 @@ class _IdentificationResultScreenState extends State<IdentificationResultScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Floating Glass Badges Row
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                GlassBadge(
+                                  label: '$confidencePct% Match',
+                                  icon: Icons.verified_rounded,
+                                  color: AppTheme.accentForest,
+                                ),
+                                GlassBadge(
+                                  label: 'Native • $displayRegion',
+                                  icon: Icons.place_rounded,
+                                  color: AppTheme.primaryForest,
+                                ),
+                                GlassBadge(
+                                  label: displayStatus,
+                                  icon: Icons.shield_outlined,
+                                  color: AppTheme.amberAccent,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
                             Text(
                               displayName,
-                              style: GoogleFonts.syne(
-                                color: Colors.white,
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                height: 1.15,
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.8,
+                                height: 1.12,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
                             Text(
                               displayScientific,
-                              style: GoogleFonts.dmSans(
-                                color: AppTheme.accentLime,
-                                fontSize: 14,
+                              style: const TextStyle(
+                                color: AppTheme.accentForest,
+                                fontSize: 16,
                                 fontStyle: FontStyle.italic,
                                 fontWeight: FontWeight.w600,
+                                letterSpacing: -0.2,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            ConservationBadge(status: displayStatus, isMedium: true),
                           ],
                         ),
                       ),
@@ -203,85 +202,51 @@ class _IdentificationResultScreenState extends State<IdentificationResultScreen>
                 ),
               ),
 
-              // Detail Body
+              // Detail Content Surface
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Flora Dex Unlock Celebration Banner
+                      // Unlock celebration banner if first discovery
                       if (_unlockResult != null)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF1E3A24), Color(0xFF0F1E13)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppTheme.accentLime, width: 1.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.accentLime.withValues(alpha: 0.2),
-                                blurRadius: 16,
-                              ),
-                            ],
-                          ),
+                        GlassContainer(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(16),
+                          borderRadius: AppTheme.radiusLarge,
+                          opacityColor: AppTheme.softSage,
+                          opacity: 0.90,
                           child: Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.accentLime.withValues(alpha: 0.2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.catching_pokemon,
-                                  color: AppTheme.accentLime,
-                                  size: 26,
-                                ),
+                              const Icon(
+                                Icons.stars_rounded,
+                                color: AppTheme.primaryForest,
+                                size: 30,
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 14),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Row(
-                                      children: [
-                                        Text(
-                                          '🎉 UNLOCKED IN FLORA DEX!',
-                                          style: TextStyle(
-                                            color: AppTheme.accentLime,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                            letterSpacing: 0.6,
-                                          ),
-                                        ),
-                                      ],
+                                    const Text(
+                                      'UNLOCKED IN MY FLORA DEX',
+                                      style: TextStyle(
+                                        color: AppTheme.primaryForest,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 12,
+                                        letterSpacing: 0.4,
+                                      ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '+${_unlockResult!.xpAwarded} XP earned for campus biodiversity collection',
+                                      '+${_unlockResult!.xpAwarded} XP earned for campus biodiversity notebook',
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: AppTheme.textPrimary,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    if (_unlockResult!.newAchievements.isNotEmpty) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '🏆 Honor Earned: ${_unlockResult!.newAchievements.first.title}',
-                                        style: const TextStyle(
-                                          color: Color(0xFFF59E0B),
-                                          fontSize: 11.5,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
                                   ],
                                 ),
                               ),
@@ -289,113 +254,130 @@ class _IdentificationResultScreenState extends State<IdentificationResultScreen>
                           ),
                         ),
 
-                      // Info chips
-                      Row(
-                        children: [
-                          _buildInfoChip(Icons.category_outlined, 'FAMILY', displayFamily),
-                          const SizedBox(width: 8),
-                          _buildInfoChip(Icons.public_outlined, 'REGION', displayRegion),
-                          const SizedBox(width: 8),
-                          _buildInfoChip(Icons.forest_outlined, 'HABITAT', displayHabitat),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-
-                      // Accordions
-                      ...sections.map((sec) {
-                        final key = sec['key'] as String;
-                        final label = sec['label'] as String;
-                        final content = sec['content'] as String;
-                        final isExpanded = _expandedKey == key;
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceCard,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppTheme.surfaceBorder),
-                          ),
-                          child: Column(
-                            children: [
-                              InkWell(
-                                onTap: () => _toggleSection(key),
-                                borderRadius: BorderRadius.circular(20),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.eco, color: AppTheme.accentLime, size: 16),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          label,
-                                          style: GoogleFonts.syne(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      Icon(
-                                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                        color: AppTheme.sageText,
-                                        size: 20,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (isExpanded)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                                  child: Text(
-                                    content,
-                                    style: GoogleFonts.dmSans(
-                                      color: AppTheme.textSecondary,
-                                      fontSize: 13,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      }),
-
-                      const SizedBox(height: 8),
-
-                      // Did You Know card
+                      // Single Unified Content Surface
                       Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0x14E8A030),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0x40E8A030), width: 1),
-                        ),
+                        decoration: AppTheme.solidCardDecoration,
+                        padding: const EdgeInsets.all(20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Key Meta Specs Grid
                             Row(
                               children: [
-                                const Text('✨', style: TextStyle(fontSize: 16)),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Field Note / Identification Feature',
-                                  style: GoogleFonts.syne(
-                                    color: AppTheme.amberAccent,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                _buildSpecColumn('FAMILY', displayFamily),
+                                _buildSpecColumn('HABITAT', displayHabitat),
+                                _buildSpecColumn('REGION', displayRegion),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              displayFeatures,
-                              style: GoogleFonts.dmSans(
-                                color: const Color(0xFFD4AA70),
-                                fontSize: 13,
-                                height: 1.45,
+
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Divider(color: AppTheme.surfaceBorder, height: 1),
+                            ),
+
+                            // Unified Accordion Sections
+                            ...sections.map((sec) {
+                              final key = sec['key'] as String;
+                              final label = sec['label'] as String;
+                              final content = sec['content'] as String;
+                              final isExpanded = _expandedKey == key;
+
+                              return Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () => _toggleSection(key),
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.eco_rounded,
+                                            color: AppTheme.accentForest,
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              label,
+                                              style: const TextStyle(
+                                                color: AppTheme.textPrimary,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: -0.2,
+                                              ),
+                                            ),
+                                          ),
+                                          Icon(
+                                            isExpanded
+                                                ? Icons.keyboard_arrow_up_rounded
+                                                : Icons.keyboard_arrow_down_rounded,
+                                            color: AppTheme.textSecondary,
+                                            size: 20,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  if (isExpanded)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 28, bottom: 12),
+                                      child: Text(
+                                        content,
+                                        style: const TextStyle(
+                                          color: AppTheme.textSecondary,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                    ),
+                                  const Divider(color: AppTheme.surfaceBorder, height: 1),
+                                ],
+                              );
+                            }),
+
+                            const SizedBox(height: 16),
+
+                            // Field Notes Card
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: AppTheme.mistBackground,
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                border: Border.all(color: AppTheme.surfaceBorder),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.nature_people_rounded,
+                                        color: AppTheme.primaryForest,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Field Identification Characteristics',
+                                        style: TextStyle(
+                                          color: AppTheme.primaryForest,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    displayFeatures,
+                                    style: const TextStyle(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 13,
+                                      height: 1.45,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -408,90 +390,51 @@ class _IdentificationResultScreenState extends State<IdentificationResultScreen>
             ],
           ),
 
-          // Sticky Bottom Bar
+          // Floating Sticky Liquid Glass Action Bar
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xF20D1410),
-                border: Border(
-                  top: BorderSide(
-                    color: AppTheme.accentLime.withValues(alpha: 0.15),
-                    width: 1,
+            bottom: 24,
+            left: 20,
+            right: 20,
+            child: GlassContainer(
+              borderRadius: AppTheme.radiusXL,
+              opacityColor: Colors.white,
+              opacity: 0.90,
+              blur: AppTheme.blurMedium,
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GlassButton(
+                      label: 'View in AR',
+                      icon: Icons.view_in_ar_rounded,
+                      variant: GlassButtonVariant.primary,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ARViewScreen(plant: effectivePlant),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ARViewScreen(plant: effectivePlant),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.accentLime,
-                            foregroundColor: AppTheme.darkBackground,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 2,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Ask AI Guide',
+                      icon: Icons.auto_awesome_rounded,
+                      variant: GlassButtonVariant.secondary,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatbotScreen(initialPlant: effectivePlant),
                           ),
-                          child: Text(
-                            'View in AR',
-                            style: GoogleFonts.syne(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0D1410),
-                            ),
-                          ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatbotScreen(initialPlant: effectivePlant),
-                              ),
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppTheme.surfaceBorder),
-                            backgroundColor: AppTheme.surfaceCard,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            'Ask AI Guide',
-                            style: GoogleFonts.syne(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.accentLime,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -500,42 +443,32 @@ class _IdentificationResultScreenState extends State<IdentificationResultScreen>
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label, String value) {
+  Widget _buildSpecColumn(String label, String value) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.surfaceBorder),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppTheme.sageText, size: 16),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.dmSans(
-                color: AppTheme.sageText,
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.8,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.textMuted,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
             ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.dmSans(
-                color: AppTheme.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
