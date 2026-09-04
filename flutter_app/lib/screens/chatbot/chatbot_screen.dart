@@ -37,7 +37,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     } else {
       _suggestedQuestions = [
         'What plants are endangered?',
-        'Tell me about the Western Ghats flora',
+        'Tell me about Western Ghats flora',
         'Best time to spot orchids in India?',
         'What are keystone species in India?',
       ];
@@ -128,7 +128,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Widget _renderFormattedText(String text, bool isUser) {
-    // Bold and italic markdown support
     final parts = text.split(RegExp(r'(\*\*[^*]+\*\*|\*[^*]+\*)'));
     final spans = <TextSpan>[];
 
@@ -152,7 +151,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           TextSpan(
             text: part,
             style: TextStyle(
-              color: isUser ? AppTheme.textSecondary : const Color(0xFFC8DCC8),
+              color: isUser ? AppTheme.textSecondary : const Color(0xFFE2E8F0),
               height: 1.45,
             ),
           ),
@@ -163,7 +162,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     return RichText(
       text: TextSpan(
         children: spans,
-        style: GoogleFonts.dmSans(fontSize: 13),
+        style: GoogleFonts.dmSans(fontSize: 13.5),
       ),
     );
   }
@@ -175,21 +174,21 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Bar
+            // Ergonomic Header Bar
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceCard,
+                color: const Color(0xF2070E09),
                 border: Border(
                   bottom: BorderSide(
-                    color: AppTheme.accentLime.withValues(alpha: 0.1),
+                    color: AppTheme.accentLime.withValues(alpha: 0.15),
                   ),
                 ),
               ),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.sageText),
+                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 4),
@@ -198,7 +197,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Botanical Guide',
+                          'AI Botanical Guide',
                           style: GoogleFonts.syne(
                             color: Colors.white,
                             fontSize: 17,
@@ -260,27 +259,28 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       children: [
                         if (!msg.isUser) ...[
                           Container(
-                            width: 32,
-                            height: 32,
+                            width: 34,
+                            height: 34,
                             margin: const EdgeInsets.only(right: 8, top: 2),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF2D4A2D),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF132A1C),
                               shape: BoxShape.circle,
+                              border: Border.all(color: AppTheme.accentLime.withValues(alpha: 0.3)),
                             ),
-                            child: const Icon(Icons.eco, color: AppTheme.accentLime, size: 16),
+                            child: const Icon(Icons.eco_rounded, color: AppTheme.accentLime, size: 18),
                           ),
                         ],
                         Flexible(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                               color: msg.isUser
-                                  ? const Color(0x24A8E63D)
-                                  : AppTheme.surfaceCard,
-                              borderRadius: BorderRadius.circular(18),
+                                  ? AppTheme.accentLime.withValues(alpha: 0.15)
+                                  : const Color(0xD9070E09),
+                              borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: msg.isUser
-                                    ? const Color(0x40A8E63D)
+                                    ? AppTheme.accentLime.withValues(alpha: 0.4)
                                     : AppTheme.surfaceBorder,
                               ),
                             ),
@@ -304,7 +304,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       width: 28,
                       height: 28,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF2D4A2D),
+                        color: Color(0xFF132A1C),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.eco, color: AppTheme.accentLime, size: 14),
@@ -330,8 +330,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            'Consulting Gemini AI Botanical Guide...',
-                            style: TextStyle(color: AppTheme.accentLime, fontSize: 11),
+                            'Consulting Gemini AI Guide...',
+                            style: TextStyle(color: AppTheme.accentLime, fontSize: 11, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -340,9 +340,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
               ),
 
-            // Suggestions Chips
+            // Suggestions Chips (Scrollable, Thumb-accessible)
             SizedBox(
-              height: 36,
+              height: 38,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -354,11 +354,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     onTap: () => _handleSubmitted(text),
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.surfaceCard,
+                        color: const Color(0xD9070E09),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0x596B8F6B)),
+                        border: Border.all(color: AppTheme.accentLime.withValues(alpha: 0.25)),
                       ),
                       child: Text(
                         text,
@@ -373,34 +373,59 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
-            // Input Bar
+            // ERGONOMIC THUMB INPUT BAR
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               child: Row(
                 children: [
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.surfaceCard,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.surfaceBorder),
-                      ),
-                      child: TextField(
-                        controller: _textController,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'Ask about any plant...',
-                          hintStyle: const TextStyle(color: AppTheme.sageText, fontSize: 14),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          border: InputBorder.none,
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.send_rounded, color: AppTheme.accentLime),
-                            onPressed: () => _handleSubmitted(_textController.text),
-                          ),
+                        color: const Color(0xF5070E09),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: AppTheme.accentLime.withValues(alpha: 0.3),
+                          width: 1.2,
                         ),
-                        onSubmitted: _handleSubmitted,
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextField(
+                              controller: _textController,
+                              style: const TextStyle(color: Colors.white, fontSize: 14.5),
+                              decoration: const InputDecoration(
+                                hintText: 'Ask about any native plant...',
+                                hintStyle: TextStyle(color: AppTheme.sageText, fontSize: 13.5),
+                                border: InputBorder.none,
+                                isDense: true,
+                              ),
+                              onSubmitted: _handleSubmitted,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Material(
+                              color: AppTheme.accentLime,
+                              shape: const CircleBorder(),
+                              child: InkWell(
+                                onTap: () => _handleSubmitted(_textController.text),
+                                customBorder: const CircleBorder(),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(10.0),
+                                  child: Icon(
+                                    Icons.send_rounded,
+                                    color: Color(0xFF070E09),
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

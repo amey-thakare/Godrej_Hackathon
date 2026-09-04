@@ -36,35 +36,35 @@ class HomeScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   stops: [0.0, 0.35, 0.70, 1.0],
                   colors: [
-                    Color(0xCC0D1410),
-                    Color(0x730D1410),
-                    Color(0xD90D1410),
-                    Color(0xFF0D1410),
+                    Color(0xCC070E09),
+                    Color(0x73070E09),
+                    Color(0xD9070E09),
+                    Color(0xFF070E09),
                   ],
                 ),
               ),
             ),
           ),
 
-          // 2. Main Content
+          // 2. Main Ergonomic Dashboard Content
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top Status / Campus Bar
+                  // Top Campus Status Pill Bar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                         decoration: BoxDecoration(
-                          color: const Color(0x990D1410),
-                          borderRadius: BorderRadius.circular(20),
+                          color: const Color(0xB2070E09),
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: AppTheme.accentLime.withValues(alpha: 0.25),
-                            width: 1,
+                            color: AppTheme.accentLime.withValues(alpha: 0.3),
+                            width: 1.2,
                           ),
                         ),
                         child: Row(
@@ -76,9 +76,16 @@ class HomeScreen extends StatelessWidget {
                               decoration: const BoxDecoration(
                                 color: AppTheme.accentLime,
                                 shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.accentLime,
+                                    blurRadius: 6,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 8),
                             const Text(
                               'Godrej Campus',
                               style: TextStyle(
@@ -91,33 +98,33 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: 42,
+                        height: 42,
                         decoration: BoxDecoration(
-                          color: const Color(0x990D1410),
+                          color: const Color(0xB2070E09),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppTheme.accentLime.withValues(alpha: 0.2),
+                            color: AppTheme.accentLime.withValues(alpha: 0.25),
                           ),
                         ),
                         child: const Icon(
                           Icons.person_outline_rounded,
                           color: AppTheme.accentLime,
-                          size: 20,
+                          size: 22,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
 
-                  // Headline & Eyebrow
+                  // Headline & Subtitle
                   Text(
                     'FIELD INTELLIGENCE',
                     style: GoogleFonts.syne(
                       color: AppTheme.accentLime,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
+                      letterSpacing: 1.8,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -125,23 +132,23 @@ class HomeScreen extends StatelessWidget {
                     "Discover What's\nGrowing Around You",
                     style: GoogleFonts.syne(
                       color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      height: 1.18,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    "AI-powered plant identification & real-time conservation data for India's native biodiversity.",
+                    "AI-powered plant identification & real-time conservation data for India's native flora.",
                     style: GoogleFonts.dmSans(
                       color: AppTheme.sageText,
                       fontSize: 14,
-                      height: 1.4,
+                      height: 1.45,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                  // Stats Row (12 Species, 3 Endangered, 48 Observations)
+                  // Stats Row Cards
                   Row(
                     children: [
                       _buildStatCard('12', 'Native Species'),
@@ -151,9 +158,9 @@ class HomeScreen extends StatelessWidget {
                       _buildStatCard('48', 'Observations'),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                  // Feature Cards Row
+                  // Ergonomic Quick Action Cards
                   Row(
                     children: [
                       Expanded(
@@ -170,27 +177,27 @@ class HomeScreen extends StatelessWidget {
                           icon: Icons.chat_bubble_outline_rounded,
                           title: 'Ask AI Guide',
                           subtitle: 'Gemini expert',
-                          onTap: () => onNavigateTab(3),
+                          onTap: () => onNavigateTab(4),
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
 
-                  // Bottom Scan CTA Button
+                  // PRIMARY ERGONOMIC CTA (Bottom Thumb Reach Zone)
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 58,
                     child: ElevatedButton(
                       onPressed: onOpenScanner,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.accentLime,
                         foregroundColor: AppTheme.darkBackground,
-                        elevation: 4,
+                        elevation: 6,
                         shadowColor: AppTheme.accentLime.withValues(alpha: 0.4),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(24),
                         ),
                       ),
                       child: Row(
@@ -201,16 +208,20 @@ class HomeScreen extends StatelessWidget {
                             style: GoogleFonts.syne(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0D1410),
+                              color: const Color(0xFF070E09),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text('🌿', style: TextStyle(fontSize: 18)),
+                          const Icon(
+                            Icons.center_focus_strong_rounded,
+                            size: 22,
+                            color: Color(0xFF070E09),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -223,13 +234,13 @@ class HomeScreen extends StatelessWidget {
   Widget _buildStatCard(String number, String label) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: const Color(0xB20D1410),
-          borderRadius: BorderRadius.circular(18),
+          color: const Color(0xD9070E09),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppTheme.accentLime.withValues(alpha: 0.15),
-            width: 1,
+            color: AppTheme.accentLime.withValues(alpha: 0.18),
+            width: 1.2,
           ),
         ),
         child: Column(
@@ -242,13 +253,14 @@ class HomeScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Text(
               label,
               textAlign: TextAlign.center,
               style: GoogleFonts.dmSans(
                 color: AppTheme.sageText,
                 fontSize: 11,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -265,28 +277,28 @@ class HomeScreen extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: const Color(0xB20D1410),
-          borderRadius: BorderRadius.circular(20),
+          color: const Color(0xD9070E09),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppTheme.accentLime.withValues(alpha: 0.16),
-            width: 1,
+            color: AppTheme.accentLime.withValues(alpha: 0.18),
+            width: 1.2,
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: AppTheme.accentLime.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                color: AppTheme.accentLime.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(icon, color: AppTheme.accentLime, size: 20),
+              child: Icon(icon, color: AppTheme.accentLime, size: 22),
             ),
             const SizedBox(height: 14),
             Text(

@@ -8,6 +8,7 @@ import '../../models/plant.dart';
 import '../../services/api_service.dart';
 import '../../services/identification_service.dart';
 import '../../theme/app_theme.dart';
+import '../ar/ar_view_screen.dart';
 import 'identification_result_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -23,7 +24,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
   bool _isLoading = false;
-  String _loadingText = 'Point at a plant to identify';
+  String _loadingText = 'Align plant within reticle & tap capture';
   String? _errorMessage;
   List<Plant> _recentPlants = [];
   late AnimationController _pulseController;
@@ -80,7 +81,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         }
       }
     } catch (e) {
-      debugPrint('Camera init error (using gallery/file capture): $e');
+      debugPrint('Camera init error: $e');
     }
   }
 
@@ -120,12 +121,10 @@ class _ScannerScreenState extends State<ScannerScreen>
         await _identifyBytes(bytes, xFile.name);
         return;
       } catch (e) {
-        debugPrint('Direct camera capture failed, trying ImagePicker: $e');
+        debugPrint('Direct camera capture error: $e');
       }
     }
 
-    // Fallback to ImagePicker camera
-    if (!mounted) return;
     _pickAndIdentify(ImageSource.camera);
   }
 
@@ -134,7 +133,7 @@ class _ScannerScreenState extends State<ScannerScreen>
     setState(() {
       _errorMessage = null;
       _isLoading = true;
-      _loadingText = source == ImageSource.camera ? 'Accessing Camera...' : 'Selecting Image...';
+      _loadingText = source == ImageSource.camera ? 'Accessing Camera...' : 'Opening Gallery...';
     });
 
     try {
@@ -149,7 +148,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       if (image == null) {
         setState(() {
           _isLoading = false;
-          _loadingText = 'Point at a plant to identify';
+          _loadingText = 'Align plant within reticle & tap capture';
         });
         return;
       }
@@ -162,7 +161,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');
-        _loadingText = 'Point at a plant to identify';
+        _loadingText = 'Align plant within reticle & tap capture';
       });
     }
   }
@@ -182,7 +181,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _loadingText = 'Point at a plant to identify';
+        _loadingText = 'Align plant within reticle & tap capture';
       });
 
       Navigator.push(
@@ -199,9 +198,37 @@ class _ScannerScreenState extends State<ScannerScreen>
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');
-        _loadingText = 'Point at a plant to identify';
+        _loadingText = 'Align plant within reticle & tap capture';
       });
     }
+  }
+
+  void _openARMode() {
+    final fallbackPlant = _recentPlants.isNotEmpty
+        ? _recentPlants.first
+        : Plant(
+            id: 1,
+            scientificName: 'Nelumbo nucifera',
+            commonName: 'Lotus',
+            family: 'Nelumbonaceae',
+            nativeRegion: 'Pan-India',
+            conservationStatus: 'Least Concern',
+            ecologicalImportance: 'Sacred aquatic keystone plant supporting freshwater wetland ecosystems.',
+            description: 'National flower of India.',
+            threats: 'Pollution.',
+            conservationActions: 'Protect wetlands.',
+            habitat: 'Ponds and lakes.',
+            identificationFeatures: 'Pink flowers, peltate leaves.',
+            imageUrl: '',
+            plantnetSpeciesName: 'Nelumbo nucifera',
+          );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ARViewScreen(plant: fallbackPlant),
+      ),
+    );
   }
 
   @override
@@ -226,20 +253,20 @@ class _ScannerScreenState extends State<ScannerScreen>
           ),
           Positioned.fill(
             child: Container(
-              color: const Color(0x660D1410),
+              color: const Color(0x55070E09),
             ),
           ),
 
-          // 2. Top Bar
+          // 2. Top Header Bar
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0x990D1410),
+                      color: const Color(0xB2070E09),
                       shape: BoxShape.circle,
                       border: Border.all(color: AppTheme.surfaceBorder),
                     ),
@@ -252,24 +279,24 @@ class _ScannerScreenState extends State<ScannerScreen>
                     'Plant Scanner',
                     style: GoogleFonts.syne(
                       color: Colors.white,
-                      fontSize: 17,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0x990D1410),
+                      color: const Color(0xB2070E09),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.accentLime.withValues(alpha: 0.3)),
+                      border: Border.all(color: AppTheme.accentLime.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 6,
-                          height: 6,
+                          width: 7,
+                          height: 7,
                           decoration: const BoxDecoration(
                             color: AppTheme.accentLime,
                             shape: BoxShape.circle,
@@ -292,12 +319,12 @@ class _ScannerScreenState extends State<ScannerScreen>
             ),
           ),
 
-          // 3. Animated Circular Reticle in Center
+          // 3. Animated Reticle in Center
           Center(
             child: AnimatedBuilder(
               animation: _pulseController,
               builder: (context, child) {
-                final scale = 1.0 + (_pulseController.value * 0.08);
+                final scale = 1.0 + (_pulseController.value * 0.07);
                 return Transform.scale(
                   scale: scale,
                   child: SizedBox(
@@ -306,7 +333,6 @@ class _ScannerScreenState extends State<ScannerScreen>
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Outer ring
                         Container(
                           width: 220,
                           height: 220,
@@ -318,7 +344,6 @@ class _ScannerScreenState extends State<ScannerScreen>
                             ),
                           ),
                         ),
-                        // Middle ring
                         Container(
                           width: 175,
                           height: 175,
@@ -330,30 +355,28 @@ class _ScannerScreenState extends State<ScannerScreen>
                             ),
                           ),
                         ),
-                        // Inner ring
                         Container(
                           width: 140,
                           height: 140,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppTheme.accentLime.withValues(alpha: 0.7),
+                              color: AppTheme.accentLime.withValues(alpha: 0.75),
                               width: 1.5,
                             ),
                           ),
                         ),
-                        // Center crosshair dot
                         Container(
-                          width: 7,
-                          height: 7,
+                          width: 8,
+                          height: 8,
                           decoration: const BoxDecoration(
                             color: AppTheme.accentLime,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
                                 color: AppTheme.accentLime,
-                                blurRadius: 8,
-                                spreadRadius: 2,
+                                blurRadius: 10,
+                                spreadRadius: 3,
                               ),
                             ],
                           ),
@@ -366,13 +389,13 @@ class _ScannerScreenState extends State<ScannerScreen>
             ),
           ),
 
-          // 4. Status Pill below Reticle
+          // 4. Status Banner below Reticle
           Align(
-            alignment: const Alignment(0, 0.42),
+            alignment: const Alignment(0, 0.38),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xB20D1410),
+                color: const Color(0xD9070E09),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: AppTheme.surfaceBorder),
               ),
@@ -381,14 +404,14 @@ class _ScannerScreenState extends State<ScannerScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const SizedBox(
-                          width: 12,
-                          height: 12,
+                          width: 14,
+                          height: 14,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: AppTheme.accentLime,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Text(
                           _loadingText,
                           style: GoogleFonts.dmSans(
@@ -404,6 +427,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                       style: GoogleFonts.dmSans(
                         color: AppTheme.textSecondary,
                         fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
             ),
@@ -412,9 +436,9 @@ class _ScannerScreenState extends State<ScannerScreen>
           // 5. Error banner if any
           if (_errorMessage != null)
             Align(
-              alignment: const Alignment(0, 0.53),
+              alignment: const Alignment(0, 0.50),
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 30),
+                margin: const EdgeInsets.symmetric(horizontal: 24),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xCC7F1D1D),
@@ -429,161 +453,149 @@ class _ScannerScreenState extends State<ScannerScreen>
               ),
             ),
 
-          // 6. Bottom Sheet with Recent Scans & Actions
+          // 6. ERGONOMIC BOTTOM CONTROL DOCK (Natural Thumb Reach Zone)
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
               decoration: BoxDecoration(
-                color: const Color(0xF50D1410),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                color: const Color(0xF2070E09),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                 border: Border.all(
-                  color: AppTheme.accentLime.withValues(alpha: 0.15),
-                  width: 1,
+                  color: AppTheme.accentLime.withValues(alpha: 0.18),
+                  width: 1.2,
                 ),
               ),
               child: SafeArea(
                 top: false,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Drawer handle
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppTheme.sageText.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
+                    // Drawer pill handle
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppTheme.sageText.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    const SizedBox(height: 12),
-
-                    Text(
-                      'RECENT / QUICK SELECT',
-                      style: GoogleFonts.syne(
-                        color: AppTheme.sageText,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Quick thumbnail chips
-                    if (_recentPlants.isNotEmpty)
-                      SizedBox(
-                        height: 60,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _recentPlants.take(5).length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 10),
-                          itemBuilder: (context, index) {
-                            final plant = _recentPlants[index];
-                            return InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => IdentificationResultScreen(
-                                      result: IdentificationResult(
-                                        success: true,
-                                        identification: SpeciesIdentification(
-                                          scientificName: plant.scientificName,
-                                          commonName: plant.commonName,
-                                          confidence: 0.95,
-                                        ),
-                                        plant: plant,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: AppTheme.accentLime.withValues(alpha: 0.25),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(15),
-                                  child: Image.network(
-                                    plant.imageUrl ?? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=200',
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(color: AppTheme.primaryForest);
-                                    },
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
                     const SizedBox(height: 16),
 
-                    // Action buttons (Gallery + Scan Now)
+                    // Ergonomic Shutter Controls Row
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: SizedBox(
-                            height: 52,
-                            child: OutlinedButton.icon(
-                              onPressed: _isLoading ? null : () => _pickAndIdentify(ImageSource.gallery),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: AppTheme.surfaceBorder),
-                                backgroundColor: AppTheme.surfaceCard,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
+                        // 1. Gallery Button (Left Thumb Access)
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _isLoading ? null : () => _pickAndIdentify(ImageSource.gallery),
+                                borderRadius: BorderRadius.circular(24),
+                                child: Container(
+                                  width: 54,
+                                  height: 54,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xCC132A1C),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: AppTheme.accentLime.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.photo_library_outlined,
+                                    color: AppTheme.accentLime,
+                                    size: 24,
+                                  ),
                                 ),
                               ),
-                              icon: const Icon(Icons.photo_library_outlined, color: AppTheme.accentLime, size: 20),
-                              label: Text(
-                                'Gallery',
-                                style: GoogleFonts.syne(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Gallery',
+                              style: GoogleFonts.dmSans(
+                                color: AppTheme.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // 2. PRIMARY SHUTTER BUTTON (Center - Primary Ergonomic Action)
+                        GestureDetector(
+                          onTap: _isLoading ? null : _captureFromCamera,
+                          child: Container(
+                            width: 76,
+                            height: 76,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.accentLime,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.accentLime.withValues(alpha: 0.45),
+                                  blurRadius: 18,
+                                  spreadRadius: 3,
                                 ),
+                              ],
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                width: 3,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.camera_alt_rounded,
+                                color: Color(0xFF070E09),
+                                size: 36,
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: SizedBox(
-                            height: 52,
-                            child: ElevatedButton.icon(
-                              onPressed: _isLoading ? null : _captureFromCamera,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.accentLime,
-                                foregroundColor: AppTheme.darkBackground,
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                              icon: const Icon(Icons.camera_alt_rounded, size: 20, color: Color(0xFF0D1410)),
-                              label: Text(
-                                'Scan Now',
-                                style: GoogleFonts.syne(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF0D1410),
+
+                        // 3. Live AR Mode Button (Right Thumb Access)
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _openARMode,
+                                borderRadius: BorderRadius.circular(24),
+                                child: Container(
+                                  width: 54,
+                                  height: 54,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xCC132A1C),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: AppTheme.accentLime.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.view_in_ar_rounded,
+                                    color: AppTheme.accentLime,
+                                    size: 24,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'AR Mode',
+                              style: GoogleFonts.dmSans(
+                                color: AppTheme.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
