@@ -358,12 +358,14 @@ class _IdentificationResultScreenState extends State<IdentificationResultScreen>
                                         size: 18,
                                       ),
                                       SizedBox(width: 8),
-                                      Text(
-                                        'Field Identification Characteristics',
-                                        style: TextStyle(
-                                          color: AppTheme.primaryForest,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w700,
+                                      Expanded(
+                                        child: Text(
+                                          'Field Identification Characteristics',
+                                          style: TextStyle(
+                                            color: AppTheme.primaryForest,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                         ),
                                       ),
                                     ],

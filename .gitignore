@@ -70,3 +70,14 @@ backend/.env
 # Database
 # Uncomment this if native_plants.db is generated/local-only:
 # backend/native_plants.db
+test_gemini.sh
+
+# Flutter/Android generated files
+flutter_app/android/.kotlin/
+
+# Temporary/patch files
+*.bak
+*_temp
+*.orig
+*.patch
+*.rej

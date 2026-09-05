@@ -57,7 +57,7 @@ class GeminiService:
             )
 
             response = self.client.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-3.6-flash",
                 contents=[image_part, prompt],
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json"
@@ -125,7 +125,7 @@ class GeminiService:
                 )
 
             response = self.client.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-3.6-flash",
                 contents=prompt_content,
                 config=types.GenerateContentConfig(
                     system_instruction=BOTANICAL_SYSTEM_INSTRUCTION

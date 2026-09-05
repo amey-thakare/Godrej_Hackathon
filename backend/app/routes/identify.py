@@ -54,7 +54,7 @@ async def identify_plant(
             detail="Uploaded image file is empty."
         )
 
-    # 3. Perform species identification (Gemini Multimodal Vision API primary, Pl@ntNet fallback)
+    # 3. Perform species identification (Gemini Multimodal Vision API primary)
     ident_result = None
     if gemini_service.client:
         try:
@@ -64,10 +64,17 @@ async def identify_plant(
                 mime_type=image.content_type or "image/jpeg"
             )
         except Exception as err:
-            logger.warning(f"Gemini identification failed ({err}), falling back to Pl@ntNet / Mock service.")
+            logger.error(f"Gemini identification failed: {err}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Gemini AI Identification failed: {err}"
+            )
 
     if not ident_result:
-        ident_result = await plantnet_service.identify_species(contents, filename=image.filename)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Gemini AI Identification returned no result."
+        )
 
     scic_name = ident_result.get("scientific_name", "")
     comm_name = ident_result.get("common_name")

@@ -29,10 +29,16 @@ class ApiConfig {
     } catch (_) {}
   }
 
-  static const String geminiModel = 'gemini-1.5-flash';
+  // Backend server URL (FastAPI running locally)
+  static const String backendBaseUrl = 'http://localhost:8000';
+  static String get backendIdentifyUrl => '$backendBaseUrl/api/v1/identify';
+
+  // Direct Gemini API (fallback if backend is down)
+  static const String geminiModel = 'gemini-3.6-flash';
   static String get geminiGenerateContentUrl =>
       'https://generativelanguage.googleapis.com/v1beta/models/$geminiModel:generateContent';
 
   // Local Asset Data Path for Curated Native Plants
   static const String localPlantsJsonPath = 'assets/data/plants.json';
 }
+

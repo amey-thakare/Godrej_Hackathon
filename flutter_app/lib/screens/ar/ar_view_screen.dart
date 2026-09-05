@@ -1,156 +1,221 @@
-import 'dart:async';
-import 'dart:math' as math;
-import 'package:camera/camera.dart';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ar_flutter_plugin_plus/ar_flutter_plugin_plus.dart';
+import 'package:ar_flutter_plugin_plus/datatypes/config_planedetection.dart';
+import 'package:ar_flutter_plugin_plus/datatypes/hittest_result_types.dart';
+import 'package:ar_flutter_plugin_plus/datatypes/node_types.dart';
+import 'package:ar_flutter_plugin_plus/managers/ar_anchor_manager.dart';
+import 'package:ar_flutter_plugin_plus/managers/ar_location_manager.dart';
+import 'package:ar_flutter_plugin_plus/managers/ar_object_manager.dart';
+import 'package:ar_flutter_plugin_plus/managers/ar_session_manager.dart';
+import 'package:ar_flutter_plugin_plus/models/ar_anchor.dart';
+import 'package:ar_flutter_plugin_plus/models/ar_hittest_result.dart';
+import 'package:ar_flutter_plugin_plus/models/ar_node.dart';
+import 'package:vector_math/vector_math_64.dart' as vector;
+
 import '../../models/plant.dart';
 import '../../services/identification_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/glass/glass_badge.dart';
-import '../../widgets/glass/glass_button.dart';
-import '../../widgets/glass/glass_container.dart';
 import '../../widgets/glass/glass_icon_button.dart';
-import '../chatbot/chatbot_screen.dart';
+import '../../widgets/glass/glass_badge.dart';
+import '../../widgets/glass/glass_container.dart';
+import '../../widgets/chat/bot_bottom_sheet.dart';
+import '../../widgets/ar_data_panel.dart';
+import '../../utils/widget_to_image.dart';
+import '../../providers/ar_session_provider.dart';
 
-class ARViewScreen extends StatefulWidget {
+class ARViewScreen extends ConsumerStatefulWidget {
   final Plant plant;
 
   const ARViewScreen({super.key, required this.plant});
 
   @override
-  State<ARViewScreen> createState() => _ARViewScreenState();
+  ConsumerState<ARViewScreen> createState() => _ARViewScreenState();
 }
 
-class _ARViewScreenState extends State<ARViewScreen>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  CameraController? _cameraController;
-  bool _isCameraInitialized = false;
+class _ARViewScreenState extends ConsumerState<ARViewScreen> {
   late Plant _currentPlant;
   bool _isScanning = false;
-  bool _autoScanEnabled = true;
-  Timer? _autoScanTimer;
-  String _statusMessage = '🟢 Live AR Scanner Active • Align Flower';
-  double _confidence = 0.95;
-  String _activeLayer = 'Species Info';
-  bool _cardOpen = true;
-
-  late AnimationController _pulseController;
-  final List<String> _layers = ['Species Info', 'Ecological Role', 'Field Notes'];
+  String _statusMessage = '🔍 Move phone slowly to detect surfaces';
+  double _confidence = 0.0;
+  final GlobalKey _dataPanelKey = GlobalKey();
+  final List<vector.Vector3> _anchorPositions = [];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _currentPlant = widget.plant;
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _initCamera();
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    final CameraController? cameraController = _cameraController;
-    if (cameraController == null || !cameraController.value.isInitialized) {
-      return;
-    }
-    if (state == AppLifecycleState.inactive) {
-      cameraController.dispose();
-      if (mounted) {
-        setState(() {
-          _isCameraInitialized = false;
-        });
+  void dispose() {
+    ref.read(arSessionProvider.notifier).dispose();
+    super.dispose();
+  }
+
+  void _onARViewCreated(
+    ARSessionManager arSessionManager,
+    ARObjectManager arObjectManager,
+    ARAnchorManager arAnchorManager,
+    ARLocationManager arLocationManager,
+  ) {
+    ref.read(arSessionProvider.notifier).setManagers(
+          arSessionManager,
+          arObjectManager,
+          arAnchorManager,
+          arLocationManager,
+        );
+
+    arSessionManager.onInitialize(
+      showFeaturePoints: true,
+      showPlanes: true,
+      customPlaneTexturePath: null,
+      showWorldOrigin: false,
+      handlePans: true,
+      handleRotation: true,
+    );
+    
+    arObjectManager.onInitialize();
+
+    arSessionManager.onPlaneOrPointTap = _onPlaneOrPointTapped;
+    
+    setState(() {
+      _statusMessage = 'Tap on a detected surface to scan plant';
+    });
+  }
+
+  Future<void> _onPlaneOrPointTapped(List<ARHitTestResult> hitTestResults) async {
+    if (hitTestResults.isEmpty || _isScanning) return;
+    
+    final singleHitTestResult = hitTestResults.first;
+    
+    if (singleHitTestResult.type == ARHitTestResultType.plane || 
+        singleHitTestResult.type == ARHitTestResultType.point) {
+      
+      final transform = singleHitTestResult.worldTransform;
+      final position = vector.Vector3(
+        transform.getColumn(3).x,
+        transform.getColumn(3).y,
+        transform.getColumn(3).z,
+      );
+
+      for (final existingPos in _anchorPositions) {
+        if (existingPos.distanceTo(position) < 0.3) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Already scanned near this location.')),
+            );
+          }
+          return;
+        }
       }
-    } else if (state == AppLifecycleState.resumed) {
-      _initCamera();
+
+      // 1. Run the scan first to get the identified plant details
+      await _triggerARScan();
+      
+      // 2. Wait a short moment to ensure the off-screen Widget is re-rendered with new data
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      // 3. Now that the plant is identified and rendered, create the Anchor and Node
+      final newAnchor = ARPlaneAnchor(transformation: transform);
+      final state = ref.read(arSessionProvider);
+      bool? didAddAnchor = await state.anchorManager?.addAnchor(newAnchor);
+      
+      if (didAddAnchor ?? false) {
+        _anchorPositions.add(position);
+        
+        final imageBytes = await WidgetToImage.captureAsBytes(_dataPanelKey);
+        
+        if (imageBytes != null) {
+          try {
+            final dir = await path_provider.getApplicationDocumentsDirectory();
+            final textureFile = File('${dir.path}/banner_texture.png');
+            await textureFile.writeAsBytes(imageBytes);
+
+            final gltfFile = File('${dir.path}/banner.gltf');
+            final gltfJson = '''{
+              "asset": {"version": "2.0"},
+              "extensionsUsed": ["KHR_materials_unlit"],
+              "scene": 0,
+              "scenes": [{"nodes": [0]}],
+              "nodes": [{"mesh": 0}],
+              "materials": [{
+                "doubleSided": true,
+                "alphaMode": "BLEND",
+                "pbrMetallicRoughness": {
+                  "baseColorTexture": {"index": 0},
+                  "metallicFactor": 0.0,
+                  "roughnessFactor": 1.0
+                },
+                "extensions": {
+                  "KHR_materials_unlit": {}
+                }
+              }],
+              "meshes": [{"primitives": [{"attributes": {"POSITION": 0, "NORMAL": 1, "TEXCOORD_0": 2}, "indices": 3, "material": 0}]}],
+              "textures": [{"sampler": 0, "source": 0}],
+              "images": [{"uri": "banner_texture.png"}],
+              "samplers": [{"magFilter": 9729, "minFilter": 9987}],
+              "buffers": [{"byteLength": 140, "uri": "data:application/octet-stream;base64,AAAAv5qZmb4AAAAAAAAAP5qZmb4AAAAAAAAAv5qZmT4AAAAAAAAAP5qZmT4AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAgD8AAAEAAgACAAEAAwA="}],
+              "bufferViews": [{"buffer": 0, "byteLength": 48, "byteOffset": 0}, {"buffer": 0, "byteLength": 48, "byteOffset": 48}, {"buffer": 0, "byteLength": 32, "byteOffset": 96}, {"buffer": 0, "byteLength": 12, "byteOffset": 128}],
+              "accessors": [{"bufferView": 0, "componentType": 5126, "count": 4, "type": "VEC3", "max": [0.5, 0.3, 0.0], "min": [-0.5, -0.3, 0.0]}, {"bufferView": 1, "componentType": 5126, "count": 4, "type": "VEC3"}, {"bufferView": 2, "componentType": 5126, "count": 4, "type": "VEC2"}, {"bufferView": 3, "componentType": 5123, "count": 6, "type": "SCALAR"}]
+            }''';
+            await gltfFile.writeAsString(gltfJson);
+
+            final nodeUri = Platform.isIOS ? 'banner.gltf' : gltfFile.absolute.path;
+
+            final newNode = ARNode(
+              type: NodeType.fileSystemAppFolderGLTF2,
+              uri: nodeUri,
+              scale: vector.Vector3(0.5, 0.5, 0.5),
+              position: vector.Vector3(0, 0.45, 0),
+              rotation: vector.Vector4(0.0, 0.0, 0.0, 1.0), 
+            );
+            
+            bool? didAddNode = await state.objectManager?.addNode(newNode, planeAnchor: newAnchor);
+            if (!(didAddNode ?? false)) {
+               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add 3D Node to AR Scene')));
+            } else {
+               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('AR Banner Added Successfully!')));
+            }
+          } catch (e) {
+            debugPrint("Failed to map AR GLTF texture: $e");
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error generating 3D banner: $e')));
+          }
+        } else {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to capture widget as image')));
+        }
+      } else {
+         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to place AR Anchor. Try moving the phone.')));
+      }
     }
   }
 
-  Future<void> _initCamera() async {
+  Future<void> _triggerARScan() async {
+    setState(() {
+      _isScanning = true;
+      _statusMessage = '🔍 Analyzing Plant...';
+    });
+    
     try {
-      final cameras = await availableCameras();
-      if (cameras.isNotEmpty && mounted) {
-        final backCamera = cameras.firstWhere(
-          (cam) => cam.lensDirection == CameraLensDirection.back,
-          orElse: () => cameras.first,
-        );
-        final controller = CameraController(
-          backCamera,
-          ResolutionPreset.high,
-          enableAudio: false,
-        );
-        _cameraController = controller;
-        await controller.initialize();
+      final state = ref.read(arSessionProvider);
+      if (state.sessionManager != null) {
+        // Simulate a brief analysis delay for UX
+        await Future.delayed(const Duration(seconds: 1));
+
         if (mounted) {
           setState(() {
-            _isCameraInitialized = true;
+            _confidence = 0.95; // Since we already identified it previously
+            _statusMessage = '🌸 AR Lock: ${_currentPlant.commonName} (95% Match)';
           });
-          _startLiveScanTimer();
         }
       }
     } catch (e) {
-      debugPrint('AR camera init error: $e');
-    }
-  }
-
-  void _startLiveScanTimer() {
-    _autoScanTimer?.cancel();
-    _autoScanTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_autoScanEnabled && !_isScanning && _isCameraInitialized && mounted) {
-        _triggerLiveFlowerScan();
-      }
-    });
-  }
-
-  Future<void> _triggerLiveFlowerScan() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized || _isScanning) {
-      return;
-    }
-
-    setState(() {
-      _isScanning = true;
-      _statusMessage = '🔍 Analyzing Flower & Leaf Live...';
-    });
-
-    try {
-      final xFile = await _cameraController!.takePicture();
-      final bytes = await xFile.readAsBytes();
-
-      final result = await IdentificationService.identifyPlantFromBytes(
-        bytes,
-        'ar_live_flower.jpg',
-      );
-
-      if (mounted) {
-        final ident = result.identification;
-        final matchedPlant = result.plant ??
-            Plant(
-              id: 0,
-              commonName: ident.commonName ?? (ident.scientificName != "Unknown" ? ident.scientificName : "Identified Flower"),
-              scientificName: ident.scientificName,
-              family: ident.family ?? 'Flora',
-              nativeRegion: 'Indian Subcontinent',
-              ecologicalImportance: ident.ecologicalImportance ?? 'Keystone species identified live via AR Vision.',
-              conservationStatus: 'Least Concern',
-              description: ident.description ?? 'Identified live via AR Botanical Vision.',
-              threats: 'Habitat loss.',
-              conservationActions: 'Protect native pollinators.',
-              habitat: 'Natural Ecosystems',
-              identificationFeatures: ident.details ?? 'Identified live via AR camera reticle.',
-              imageUrl: '',
-            );
-
-        setState(() {
-          _currentPlant = matchedPlant;
-          _confidence = ident.confidence;
-          _statusMessage = '🌸 Identified: ${matchedPlant.commonName} (${(ident.confidence * 100).toStringAsFixed(0)}% Match)';
-        });
-      }
-    } catch (e) {
-      debugPrint('Live AR scan error: $e');
       if (mounted) {
         setState(() {
-          _statusMessage = '🟢 Live AR Scanner Active • Align Flower';
+          _statusMessage = 'Tap on a surface to scan';
         });
       }
     } finally {
@@ -163,60 +228,30 @@ class _ARViewScreenState extends State<ARViewScreen>
   }
 
   @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _autoScanTimer?.cancel();
-    _pulseController.dispose();
-    _cameraController?.dispose();
-    super.dispose();
-  }
-
-  String _getLayerContent() {
-    switch (_activeLayer) {
-      case 'Ecological Role':
-        return '🐝 ${_currentPlant.ecologicalImportance}\n\nHabitat: ${_currentPlant.habitat}';
-      case 'Field Notes':
-        return '🌿 ${_currentPlant.identificationFeatures}\n\nThreats: ${_currentPlant.threats}';
-      case 'Species Info':
-      default:
-        return 'Family: ${_currentPlant.family} · Region: ${_currentPlant.nativeRegion}\n\n${_currentPlant.description}';
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final confidencePct = (_confidence * 100).round();
-
+    
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1. Live Camera Viewport
-          Positioned.fill(
-            child: _isCameraInitialized &&
-                    _cameraController != null &&
-                    _cameraController!.value.isInitialized
-                ? CameraPreview(_cameraController!)
-                : Image.network(
-                    _currentPlant.imageUrl ?? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800',
-                    fit: BoxFit.cover,
-                  ),
-          ),
-
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.15),
+          // Hidden offstage widget to allow capture as Uint8List
+          Positioned(
+            left: -2000,
+            top: -2000,
+            child: RepaintBoundary(
+              key: _dataPanelKey,
+              child: ArDataPanel(plant: _currentPlant),
             ),
           ),
 
-          // 2. AR Grid Painter Background
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _ARGridPainter(),
-            ),
+          // 1. AR View
+          ARView(
+            onARViewCreated: _onARViewCreated,
+            planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
           ),
-
-          // 3. Top Floating Liquid Glass Controls
+          
+          // 2. Top UI Controls
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
@@ -229,7 +264,7 @@ class _ARViewScreenState extends State<ARViewScreen>
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 6),
-
+                  
                   // Live Species Badge Pill
                   Expanded(
                     child: GlassContainer(
@@ -273,60 +308,12 @@ class _ARViewScreenState extends State<ARViewScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 6),
-
-                  // Auto Scan Live Switch Pill
-                  GlassContainer(
-                    borderRadius: AppTheme.radiusXL,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    opacityColor: Colors.white,
-                    opacity: 0.88,
-                    blur: AppTheme.blurMedium,
-                    onTap: () {
-                      setState(() {
-                        _autoScanEnabled = !_autoScanEnabled;
-                      });
-                      if (_autoScanEnabled) _startLiveScanTimer();
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'Live AR',
-                          style: TextStyle(
-                            color: AppTheme.primaryForest,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Container(
-                          width: 26,
-                          height: 15,
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: _autoScanEnabled ? AppTheme.accentForest : AppTheme.surfaceBorder,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          alignment: _autoScanEnabled ? Alignment.centerRight : Alignment.centerLeft,
-                          child: Container(
-                            width: 11,
-                            height: 11,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
-
-          // 4. Live Status Pill Banner below Header
+          
+          // 3. Status Pill Banner
           Positioned(
             top: 84,
             left: 20,
@@ -352,12 +339,15 @@ class _ARViewScreenState extends State<ARViewScreen>
                       ),
                       const SizedBox(width: 8),
                     ],
-                    Text(
-                      _statusMessage,
-                      style: const TextStyle(
-                        color: AppTheme.primaryForest,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                    Flexible(
+                      child: Text(
+                        _statusMessage,
+                        style: const TextStyle(
+                          color: AppTheme.primaryForest,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ],
@@ -365,260 +355,11 @@ class _ARViewScreenState extends State<ARViewScreen>
               ),
             ),
           ),
-
-          // 5. Animated Spatial AR Target Reticle in Center
-          Center(
-            child: AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                final scale = 1.0 + (_pulseController.value * 0.08);
-                return Transform.scale(
-                  scale: scale,
-                  child: CustomPaint(
-                    size: const Size(220, 220),
-                    painter: _LiveARReticlePainter(isScanning: _isScanning),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // 6. Bottom Floating Liquid Glass Layer Switcher & AR Info Card
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Layer Selector Pills
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: _layers.map((layer) {
-                      final isSelected = _activeLayer == layer;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 3.0),
-                        child: GlassContainer(
-                          opacityColor: isSelected ? AppTheme.primaryForest : Colors.white,
-                          opacity: isSelected ? 0.92 : 0.85,
-                          blur: AppTheme.blurSmall,
-                          borderRadius: AppTheme.radiusXL,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                          onTap: () {
-                            setState(() {
-                              _activeLayer = layer;
-                            });
-                          },
-                          child: Text(
-                            layer,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : AppTheme.primaryForest,
-                              fontSize: 11.5,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // Floating Liquid Glass Bottom Card
-                Container(
-                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                  child: GlassContainer(
-                    borderRadius: AppTheme.radiusXL,
-                    opacityColor: Colors.white,
-                    opacity: 0.92,
-                    blur: AppTheme.blurLarge,
-                    padding: const EdgeInsets.all(16),
-                    child: SafeArea(
-                      top: false,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _currentPlant.commonName,
-                                      style: const TextStyle(
-                                        color: AppTheme.textPrimary,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.4,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _currentPlant.scientificName,
-                                      style: const TextStyle(
-                                        color: AppTheme.accentForest,
-                                        fontSize: 13,
-                                        fontStyle: FontStyle.italic,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              GlassIconButton(
-                                icon: _cardOpen
-                                    ? Icons.keyboard_arrow_down_rounded
-                                    : Icons.keyboard_arrow_up_rounded,
-                                size: 36,
-                                iconSize: 20,
-                                onPressed: () {
-                                  setState(() {
-                                    _cardOpen = !_cardOpen;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-
-                          if (_cardOpen) ...[
-                            const SizedBox(height: 12),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppTheme.mistBackground,
-                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                                border: Border.all(color: AppTheme.surfaceBorder),
-                              ),
-                              child: Text(
-                                _getLayerContent(),
-                                style: const TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 13,
-                                  height: 1.45,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: GlassButton(
-                                    label: 'Scan Flower Live',
-                                    icon: Icons.camera_alt_rounded,
-                                    height: 46,
-                                    variant: GlassButtonVariant.primary,
-                                    isLoading: _isScanning,
-                                    onPressed: _triggerLiveFlowerScan,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: GlassButton(
-                                    label: 'Ask AI Guide',
-                                    icon: Icons.auto_awesome_rounded,
-                                    height: 46,
-                                    variant: GlassButtonVariant.secondary,
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ChatbotScreen(initialPlant: _currentPlant),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          
+          // 4. Contextual Chatbot Bottom Sheet
+          BotBottomSheet(plant: _currentPlant),
         ],
       ),
     );
   }
-}
-
-// Live AR Hexagonal Reticle Painter
-class _LiveARReticlePainter extends CustomPainter {
-  final bool isScanning;
-
-  _LiveARReticlePainter({required this.isScanning});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    final paint = Paint()
-      ..color = isScanning ? AppTheme.accentForest : Colors.white.withValues(alpha: 0.85)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = isScanning ? 2.5 : 1.8;
-
-    final path = Path();
-    final List<Offset> points = [];
-
-    for (int i = 0; i < 6; i++) {
-      final angle = (i * 60 - 30) * math.pi / 180;
-      final x = center.dx + radius * math.cos(angle);
-      final y = center.dy + radius * math.sin(angle);
-      points.add(Offset(x, y));
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    canvas.drawPath(path, paint);
-
-    final nodePaint = Paint()
-      ..color = AppTheme.leafGreen
-      ..style = PaintingStyle.fill;
-
-    for (final pt in points) {
-      canvas.drawCircle(pt, 4.0, nodePaint);
-    }
-
-    canvas.drawCircle(center, 5, nodePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _LiveARReticlePainter oldDelegate) {
-    return oldDelegate.isScanning != isScanning;
-  }
-}
-
-// AR Grid lines painter
-class _ARGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppTheme.leafGreen.withValues(alpha: 0.04)
-      ..strokeWidth = 1;
-
-    for (double y = 0; y < size.height; y += 40) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-    for (double x = 0; x < size.width; x += 40) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../models/plant.dart';
-import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass/glass_button.dart';
 import '../../widgets/glass/glass_container.dart';
-import '../ar/ar_view_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final Function(int) onNavigateTab;
@@ -16,40 +13,11 @@ class HomeScreen extends StatelessWidget {
     required this.onOpenScanner,
   });
 
-  void _openARMode(BuildContext context) async {
-    Plant? defaultPlant;
-    try {
-      final plants = await ApiService.getPlants();
-      if (plants.isNotEmpty) {
-        defaultPlant = plants.first;
-      }
-    } catch (_) {}
-
-    defaultPlant ??= Plant(
-      id: 1,
-      scientificName: 'Nelumbo nucifera',
-      commonName: 'Lotus',
-      family: 'Nelumbonaceae',
-      nativeRegion: 'Pan-India',
-      conservationStatus: 'Least Concern',
-      ecologicalImportance: 'Sacred aquatic keystone plant supporting freshwater wetland ecosystems.',
-      description: 'National flower of India. Perennial aquatic plant with peltate leaves and radiant pink blooms.',
-      threats: 'Pollution.',
-      conservationActions: 'Protect wetlands.',
-      habitat: 'Ponds and lakes.',
-      identificationFeatures: 'Pink flowers, peltate leaves.',
-      imageUrl: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800',
-      plantnetSpeciesName: 'Nelumbo nucifera',
-    );
-
-    if (context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ARViewScreen(plant: defaultPlant!),
-        ),
-      );
-    }
+  void _openARMode(BuildContext context) {
+    // Navigate to the scanner screen — the scanner has a proper
+    // AR-mode button that captures a photo, identifies the plant via
+    // Gemini Vision, and then opens ARViewScreen with the correct plant.
+    onOpenScanner();
   }
 
   @override
