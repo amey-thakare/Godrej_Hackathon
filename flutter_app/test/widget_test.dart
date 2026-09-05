@@ -14,8 +14,8 @@ void main() {
     await tester.pump();
 
     // Verify key titles exist
-    expect(find.text('FIELD INTELLIGENCE'), findsOneWidget);
-    expect(find.text('Plant Catalog'), findsOneWidget);
+    expect(find.text('Field Intelligence Overview'), findsOneWidget);
+    expect(find.text('Identify a Plant'), findsOneWidget);
     expect(find.text('Ask AI Guide'), findsOneWidget);
   });
 }

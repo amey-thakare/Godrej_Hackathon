@@ -8,18 +8,17 @@ logger = logging.getLogger(__name__)
 
 # Sample mock species pool for DEMO_MODE fallback testing
 MOCK_SPECIES_POOL = [
-    {"scientific_name": "Ficus benghalensis", "common_name": "Banyan Tree", "confidence": 0.92},
-    {"scientific_name": "Azadirachta indica", "common_name": "Neem", "confidence": 0.89},
-    {"scientific_name": "Syzygium cumini", "common_name": "Jamun / Black Plum", "confidence": 0.91},
-    {"scientific_name": "Ficus religiosa", "common_name": "Sacred Fig / Peepal", "confidence": 0.88},
-    {"scientific_name": "Saraca asoca", "common_name": "Ashoka Tree", "confidence": 0.86},
-    {"scientific_name": "Santalum album", "common_name": "Indian Sandalwood", "confidence": 0.84},
-    {"scientific_name": "Aegle marmelos", "common_name": "Bael / Sacred Bilva", "confidence": 0.87},
-    {"scientific_name": "Butea monosperma", "common_name": "Flame of the Forest", "confidence": 0.93},
-    {"scientific_name": "Pongamia pinnata", "common_name": "Karanja / Indian Beech", "confidence": 0.85},
-    {"scientific_name": "Alstonia scholaris", "common_name": "Saptaparni / Devil Tree", "confidence": 0.83},
-    {"scientific_name": "Helianthus annuus", "common_name": "Sunflower", "confidence": 0.94},
-    {"scientific_name": "Nelumbo nucifera", "common_name": "Sacred Lotus", "confidence": 0.95},
+    {"scientific_name": "Bougainvillea glabra", "common_name": "Bougainvillea / Paper Flower", "confidence": 0.94},
+    {"scientific_name": "Bambusa vulgaris", "common_name": "Common Bamboo", "confidence": 0.91},
+    {"scientific_name": "Tecoma stans", "common_name": "Yellow Bells / Yellow Trumpetbush", "confidence": 0.93},
+    {"scientific_name": "Chrysanthemum × morifolium", "common_name": "Florist's Chrysanthemum", "confidence": 0.89},
+    {"scientific_name": "Helianthus annuus", "common_name": "Common Sunflower", "confidence": 0.95},
+    {"scientific_name": "Roystonea regia", "common_name": "Cuban Royal Palm", "confidence": 0.88},
+    {"scientific_name": "Cordyline fruticosa", "common_name": "Ti Plant / Cabbage Palm", "confidence": 0.90},
+    {"scientific_name": "Tabernaemontana divaricata", "common_name": "Crape Jasmine / Nandiyavattai", "confidence": 0.87},
+    {"scientific_name": "Samanea saman", "common_name": "Rain Tree / Thoongu Moonji Maram", "confidence": 0.92},
+    {"scientific_name": "Cordyline fruticosa", "common_name": "Ti Plant (Tall grouping)", "confidence": 0.86},
+    {"scientific_name": "Pandanus veitchii", "common_name": "Variegated Screw Pine / Dwarf Pandanus", "confidence": 0.89},
 ]
 
 

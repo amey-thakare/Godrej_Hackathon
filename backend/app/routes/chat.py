@@ -47,7 +47,8 @@ async def chat_botanical_guide(
 
     reply = await gemini_service.generate_botanical_response(
         user_message=request.message,
-        plant_context=plant_context
+        plant_context=plant_context,
+        chat_history=request.chat_history
     )
 
     return ChatResponse(

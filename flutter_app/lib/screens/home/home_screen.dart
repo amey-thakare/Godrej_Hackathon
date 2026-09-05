@@ -164,7 +164,6 @@ class HomeScreen extends StatelessWidget {
                     variant: GlassButtonVariant.primary,
                     onPressed: onOpenScanner,
                   ),
-
                   const SizedBox(height: 24),
 
                   // Secondary Floating Quick Action Pills
@@ -232,9 +231,9 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            _buildStatItem('12', 'Native Species'),
+                            _buildStatItem('11', 'Campus Species'),
                             _buildDivider(),
-                            _buildStatItem('3', 'Endangered'),
+                            _buildStatItem('9', 'Botanical Families'),
                             _buildDivider(),
                             _buildStatItem('48', 'Observations'),
                           ],

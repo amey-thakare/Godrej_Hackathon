@@ -93,98 +93,90 @@ class FloraDexPlantMeta {
     1: FloraDexPlantMeta(
       plantId: 1,
       rarity: RarityTier.common,
-      campusHint: 'Central quadrangle ancient banyan grove & heritage plaza',
+      campusHint: 'Campus perimeter bio-fences, sun-drenched archways & stone pergolas',
       ecologicalFunFact:
-          'A single mature banyan canopy can shelter more than 100 bird, mammal, and insect species with year-round fig crops.',
-      bloomSeason: 'Year-round fig fruiting cycles',
+          'Its dense, thorny entanglement creates safe shelter for small garden birds away from urban predators.',
+      bloomSeason: 'Year-round in warm climates (Peak Nov – May)',
     ),
     2: FloraDexPlantMeta(
       plantId: 2,
-      rarity: RarityTier.common,
-      campusHint: 'Campus boundary green belts & perimeter bio-fences',
+      rarity: RarityTier.uncommon,
+      campusHint: 'Campus retention pond bank & stream side green belts',
       ecologicalFunFact:
-          'Azadirachtin in neem leaves deters over 200 insect pest species while acting as a natural organic soil revitalizer.',
-      bloomSeason: 'Spring (March – May)',
+          'Can produce 35% more oxygen and sequester up to 12 tonnes of CO2 per hectare annually compared to many timber trees.',
+      bloomSeason: 'Infrequent monocarpic multi-decade flowering',
     ),
     3: FloraDexPlantMeta(
       plantId: 3,
-      rarity: RarityTier.uncommon,
-      campusHint: 'Retention ponds & bio-swales near water corridors',
+      rarity: RarityTier.common,
+      campusHint: 'Sunny central courtyard borders & pollinator observation patches',
       ecologicalFunFact:
-          'Its deep purple berries provide vital monsoon carbohydrates and electrolytes for wild birds and fruit bats.',
-      bloomSeason: 'Pre-monsoon (March – June)',
+          'Its nectar-rich tubular blossoms are custom-shaped for long-tongued native bees and nectar-feeding sunbirds.',
+      bloomSeason: 'Almost year-round (Peak post-monsoon to spring)',
     ),
     4: FloraDexPlantMeta(
       plantId: 4,
-      rarity: RarityTier.common,
-      campusHint: 'Eastern heritage plaza & wildlife stepping corridors',
+      rarity: RarityTier.uncommon,
+      campusHint: 'Botanical greenhouse conservatory & student seasonal flower beds',
       ecologicalFunFact:
-          'Releases significant oxygen even during the night via Crassulacean Acid Metabolism (CAM).',
-      bloomSeason: 'Variable spring fig production',
+          'Provides crucial late-season nectar when most other flowering perennials have ceased blooming for the winter.',
+      bloomSeason: 'Autumn to mid-winter (October – January)',
     ),
     5: FloraDexPlantMeta(
       plantId: 5,
       rarity: RarityTier.uncommon,
-      campusHint: 'Dry deciduous woodland ridge & rock garden perimeter',
+      campusHint: 'Agricultural demonstration plots & open pollinator meadow',
       ecologicalFunFact:
-          'Its remarkable crocodile-like bark can store clean drinkable water during harsh parched summer droughts.',
-      bloomSeason: 'April – May blooms, fruits in winter',
+          'Young flower heads track the sun across the sky daily; mature dried seed heads feed dozens of wild bird species.',
+      bloomSeason: 'Summer to post-monsoon (June – October)',
     ),
     6: FloraDexPlantMeta(
       plantId: 6,
-      rarity: RarityTier.legendary,
-      campusHint: 'Shaded Western Ghats arboretum micro-climate',
+      rarity: RarityTier.rare,
+      campusHint: 'Grand campus ceremonial entrance avenue & administration concourse',
       ecologicalFunFact:
-          'A sacred rainforest understory jewel of the Western Ghats; critically threatened by destructive wild bark harvesting.',
-      bloomSeason: 'February – April (Fragrant orange-red clusters)',
+          'The lofty crownshaft acts as high-rise nesting platforms for urban bats and cavity-nesting parakeets.',
+      bloomSeason: 'Summer flowering with autumn dark purple fruit clusters',
     ),
     7: FloraDexPlantMeta(
       plantId: 7,
-      rarity: RarityTier.rare,
-      campusHint: 'Forest border conservation belt & southern tree line',
+      rarity: RarityTier.common,
+      campusHint: 'Shaded courtyard understory beds & indoor botanical atrium',
       ecologicalFunFact:
-          'Its nocturnal sweet flowers fall before dawn and are eagerly harvested by Asian palm civets and fruit bats.',
-      bloomSeason: 'March – April (Night-blooming sweet blossoms)',
+          'Broad colorful leaves act as micro-umbrellas, creating shaded, humid soil microhabitats for beneficial insects.',
+      bloomSeason: 'Late winter to spring (Terminal panicles of tiny flowers)',
     ),
     8: FloraDexPlantMeta(
       plantId: 8,
       rarity: RarityTier.uncommon,
-      campusHint: 'Medicinal nursery garden & sunny south terrace',
+      campusHint: 'Pathway structural hedges & medicinal garden perimeter',
       ecologicalFunFact:
-          'Its trifoliate leaves naturally absorb atmospheric pollutants and heavy particulate compounds from urban air.',
-      bloomSeason: 'April – June (Aromatic pale green flowers)',
+          'Its sweet nocturnal fragrance intensifies after sunset specifically to attract night-flying pollinating hawk moths.',
+      bloomSeason: 'Year-round (Peak during warm, humid months)',
     ),
     9: FloraDexPlantMeta(
       plantId: 9,
       rarity: RarityTier.legendary,
-      campusHint: 'Protected biodiversity sanctuary growing close to host trees',
+      campusHint: 'Central heritage lawn & ancient campus quadrangle',
       ecologicalFunFact:
-          'A hemi-parasitic heritage tree whose root haustoria draw essential minerals from surrounding native host trees.',
-      bloomSeason: 'Summer to monsoon (Small purplish flowers)',
+          'Its colossal canopy can spread over 60 meters wide, fixing atmospheric nitrogen while significantly cooling ground temperatures.',
+      bloomSeason: 'March – May & post-monsoon (Puffball pink-and-white blooms)',
     ),
     10: FloraDexPlantMeta(
       plantId: 10,
       rarity: RarityTier.rare,
-      campusHint: 'North hill slope & open campus meadow canopy',
+      campusHint: 'South botanical slope border & multi-layered canopy edge',
       ecologicalFunFact:
-          'Known as "Palash", its blaze of scarlet flowers signals spring and feeds hundreds of parakeets and sunbirds.',
-      bloomSeason: 'February – March (Spectacular fiery orange blaze)',
+          'Mature multi-stem clusters form an interwoven root matrix that locks slope topsoil during torrential rains.',
+      bloomSeason: 'Spring flushes with persistent architectural foliage',
     ),
     11: FloraDexPlantMeta(
       plantId: 11,
-      rarity: RarityTier.common,
-      campusHint: 'Bioretention swales & roadside rain gardens',
+      rarity: RarityTier.rare,
+      campusHint: 'Rock garden perimeter & arid succulent terrace',
       ecologicalFunFact:
-          'A pioneer legume that fixes atmospheric nitrogen, restoring fertile organic matter into degraded soils.',
-      bloomSeason: 'April – June (Fragrant pinkish-white blossoms)',
-    ),
-    12: FloraDexPlantMeta(
-      plantId: 12,
-      rarity: RarityTier.uncommon,
-      campusHint: 'Perimeter walkway & exterior campus boundary',
-      ecologicalFunFact:
-          'Features characteristic 7-whorled leaves and autumn nocturnal blooms that attract hawk moths.',
-      bloomSeason: 'October – November (Intense nocturnal fragrance)',
+          'Its thick aerial prop roots anchor into steep rocky terrain, acting as natural windbreaks and drought-resistant soil anchors.',
+      bloomSeason: 'Variable tropical flowering; celebrated for variegated evergreen spirals',
     ),
   };
 
