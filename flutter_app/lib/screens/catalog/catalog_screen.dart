@@ -23,9 +23,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
   final List<String> _filters = [
     "All",
     "Least Concern",
-    "Vulnerable",
-    "Threatened",
-    "Endangered",
+    "Not Evaluated",
   ];
 
   @override
@@ -57,7 +55,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
   List<Plant> get _filteredPlants {
     return _plants.where((p) {
       final matchFilter = _selectedFilter == "All" ||
-          p.conservationStatus.toLowerCase() == _selectedFilter.toLowerCase();
+          p.conservationStatus.toLowerCase().contains(_selectedFilter.toLowerCase());
       final query = _searchController.text.toLowerCase().trim();
       final matchSearch = query.isEmpty ||
           p.commonName.toLowerCase().contains(query) ||

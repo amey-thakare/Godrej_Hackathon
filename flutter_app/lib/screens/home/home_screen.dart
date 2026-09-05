@@ -141,12 +141,12 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Stats Row (12 Species, 3 Endangered, 48 Observations)
+                  // Stats Row (11 Species, 9 Plant Families, 48 Observations)
                   Row(
                     children: [
-                      _buildStatCard('12', 'Native Species'),
+                      _buildStatCard('11', 'Campus Species'),
                       const SizedBox(width: 10),
-                      _buildStatCard('3', 'Endangered'),
+                      _buildStatCard('9', 'Botanical Families'),
                       const SizedBox(width: 10),
                       _buildStatCard('48', 'Observations'),
                     ],
@@ -160,7 +160,7 @@ class HomeScreen extends StatelessWidget {
                         child: _buildFeatureCard(
                           icon: Icons.eco_rounded,
                           title: 'Plant Catalog',
-                          subtitle: 'Browse 12 species',
+                          subtitle: 'Browse 11 species',
                           onTap: () => onNavigateTab(2),
                         ),
                       ),

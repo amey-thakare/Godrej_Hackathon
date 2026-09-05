@@ -29,9 +29,18 @@ class ApiConfig {
     } catch (_) {}
   }
 
-  static const String geminiModel = 'gemini-3.6-flash';
-  static String get geminiGenerateContentUrl =>
-      'https://generativelanguage.googleapis.com/v1beta/models/$geminiModel:generateContent';
+  static const String geminiModel = 'gemini-3.5-flash-lite';
+  static const List<String> fallbackGeminiModels = [
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-3.6-flash',
+    'gemini-flash-latest',
+  ];
+
+  static String getGeminiGenerateContentUrl([String? model]) =>
+      'https://generativelanguage.googleapis.com/v1beta/models/${model ?? geminiModel}:generateContent';
+
+  static String get geminiGenerateContentUrl => getGeminiGenerateContentUrl(geminiModel);
 
   // Local Asset Data Path for Curated Native Plants
   static const String localPlantsJsonPath = 'assets/data/plants.json';

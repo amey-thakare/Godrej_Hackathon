@@ -7,7 +7,7 @@ class Plant(Base):
     __tablename__ = "plants"
 
     id = Column(Integer, primary_key=True, index=True)
-    scientific_name = Column(String(255), nullable=False, unique=True, index=True)
+    scientific_name = Column(String(255), nullable=False, unique=False, index=True)
     common_name = Column(String(255), nullable=False, index=True)
     family = Column(String(255), nullable=False)
     native_region = Column(String(255), nullable=False)

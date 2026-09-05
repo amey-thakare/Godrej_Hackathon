@@ -29,7 +29,7 @@ class FloraDexService {
     Achievement(
       id: 'first_scan',
       title: 'First Scan',
-      description: 'Discover and identify your first native plant species on campus.',
+      description: 'Discover and identify your first plant species on campus.',
       icon: Icons.camera_alt_rounded,
       accentColor: Color(0xFF22C55E),
       xpReward: 50,
@@ -38,7 +38,7 @@ class FloraDexService {
     Achievement(
       id: 'rare_finder',
       title: 'Rare Finder',
-      description: 'Find and unlock your first Rare native plant species.',
+      description: 'Find and unlock your first Rare plant species (Royal Palm, Ti Tall, or Screw Pine).',
       icon: Icons.auto_awesome_rounded,
       accentColor: Color(0xFFA855F7),
       xpReward: 50,
@@ -47,7 +47,7 @@ class FloraDexService {
     Achievement(
       id: 'legendary_hunter',
       title: 'Legendary Hunter',
-      description: 'Locate and document a Legendary heritage species (Ashoka or Sandalwood).',
+      description: 'Locate and document the Legendary heritage Rain Tree (Samanea saman).',
       icon: Icons.workspace_premium_rounded,
       accentColor: Color(0xFFF59E0B),
       xpReward: 100,
@@ -56,7 +56,7 @@ class FloraDexService {
     Achievement(
       id: 'family_collector',
       title: 'Family Collector',
-      description: 'Collect all species belonging to a single botanical family (e.g. Moraceae).',
+      description: 'Collect all species belonging to a botanical family (Asteraceae or Asparagaceae).',
       icon: Icons.account_tree_rounded,
       accentColor: Color(0xFF3B82F6),
       xpReward: 75,
@@ -65,7 +65,7 @@ class FloraDexService {
     Achievement(
       id: 'campus_streak',
       title: 'Field Explorer',
-      description: 'Scan and document native flora across multiple field observation days.',
+      description: 'Scan and document campus flora across multiple field observation days.',
       icon: Icons.local_fire_department_rounded,
       accentColor: Color(0xFFEF4444),
       xpReward: 50,
@@ -74,7 +74,7 @@ class FloraDexService {
     Achievement(
       id: 'full_set',
       title: 'Grand Botanist',
-      description: 'Discover and complete the entire 12-species campus native flora catalog.',
+      description: 'Discover and complete the entire 11-species campus flora catalog.',
       icon: Icons.military_tech_rounded,
       accentColor: Color(0xFF10B981),
       xpReward: 200,
@@ -82,14 +82,14 @@ class FloraDexService {
     ),
   ];
 
-  // Initialize with initial demo discovered species (Neem & Banyan) on very first launch
+  // Initialize with initial demo discovered species (Bougainvillea) on very first launch
   static Future<void> initDefaultDemoIfEmpty() async {
     final prefs = await SharedPreferences.getInstance();
     if (!prefs.containsKey(_unlockedIdsKey)) {
-      // Seed Neem (id 2) as discovered
-      final initialIds = ['2'];
-      final initialDates = {'2': 'Sep 4, 2026 • 09:30 AM'};
-      final initialAchievements = {'first_scan': 'Sep 4, 2026 • 09:30 AM'};
+      // Seed Bougainvillea (id 1) as discovered
+      final initialIds = ['1'];
+      final initialDates = {'1': 'Sep 5, 2026 • 09:30 AM'};
+      final initialAchievements = {'first_scan': 'Sep 5, 2026 • 09:30 AM'};
 
       await prefs.setStringList(_unlockedIdsKey, initialIds);
       await prefs.setString(_discoveryDatesKey, jsonEncode(initialDates));
@@ -233,16 +233,15 @@ class FloraDexService {
       awardAchievement('legendary_hunter');
     }
 
-    // D. Family Collector (Moraceae: 1 & 4; Fabaceae: 6, 10, 11)
-    final hasMoraceae = unlockedSet.contains(1) && unlockedSet.contains(4);
-    final hasFabaceae =
-        unlockedSet.contains(6) && unlockedSet.contains(10) && unlockedSet.contains(11);
-    if (hasMoraceae || hasFabaceae) {
+    // D. Family Collector (Asteraceae: 4 & 5; Asparagaceae: 7 & 10)
+    final hasAsteraceae = unlockedSet.contains(4) && unlockedSet.contains(5);
+    final hasAsparagaceae = unlockedSet.contains(7) && unlockedSet.contains(10);
+    if (hasAsteraceae || hasAsparagaceae) {
       awardAchievement('family_collector');
     }
 
     // E. Full Set
-    if (unlockedSet.length >= 12) {
+    if (unlockedSet.length >= 11) {
       awardAchievement('full_set');
     }
 
