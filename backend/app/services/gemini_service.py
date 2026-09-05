@@ -60,7 +60,7 @@ class GeminiService:
             )
 
             response = self.client.models.generate_content(
-                model="gemini-3.5-flash-lite",
+                model="gemini-3.6-flash",
                 contents=[image_part, prompt],
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json"
@@ -123,43 +123,6 @@ class GeminiService:
                 content = getattr(item, "content", "")
                 history_context += f"{role.capitalize()}: {content}\n"
 
-        prompt_content = ""
-        if history_context:
-            prompt_content += f"Conversation History:\n{history_context}\n"
-
-        if plant_context:
-            prompt_content += (
-                f"Curated Plant Record:\n"
-                f"- Common Name: {plant_context.get('common_name')}\n"
-                f"- Scientific Name: {plant_context.get('scientific_name')}\n"
-                f"- Family: {plant_context.get('family')}\n"
-                f"- Native Region: {plant_context.get('native_region')}\n"
-                f"- Conservation Status: {plant_context.get('conservation_status')}\n"
-                f"- Ecological Importance: {plant_context.get('ecological_importance')}\n"
-                f"- Description: {plant_context.get('description')}\n"
-                f"- Threats: {plant_context.get('threats')}\n"
-                f"- Conservation Actions: {plant_context.get('conservation_actions')}\n"
-                f"- Identification Features: {plant_context.get('identification_features')}\n\n"
-            )
-
-        prompt_content += f"User Question: {user_message}\n"
-
-        models_to_try = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.6-flash"]
-        for model_name in models_to_try:
-            try:
-                response = self.client.models.generate_content(
-                    model=model_name,
-                    contents=prompt_content,
-                    config=types.GenerateContentConfig(
-                        system_instruction=BOTANICAL_SYSTEM_INSTRUCTION
-                    )
-                )
-                if response and response.text:
-                    return response.text
-            except Exception as exc:
-                logger.warning(f"Model {model_name} failed: {exc}, trying next model.")
-
-        return f"The Botanical Guide is operating in offline mode: {user_message}"
 
 
 gemini_service = GeminiService()

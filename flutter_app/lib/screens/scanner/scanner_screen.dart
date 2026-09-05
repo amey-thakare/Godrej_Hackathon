@@ -210,32 +210,54 @@ class _ScannerScreenState extends State<ScannerScreen>
     }
   }
 
-  void _openARMode() {
-    final fallbackPlant = _recentPlants.isNotEmpty
-        ? _recentPlants.first
-        : Plant(
-            id: 1,
-            scientificName: 'Nelumbo nucifera',
-            commonName: 'Lotus',
-            family: 'Nelumbonaceae',
-            nativeRegion: 'Pan-India',
-            conservationStatus: 'Least Concern',
-            ecologicalImportance: 'Sacred aquatic keystone plant supporting freshwater wetland ecosystems.',
-            description: 'National flower of India.',
-            threats: 'Pollution.',
-            conservationActions: 'Protect wetlands.',
-            habitat: 'Ponds and lakes.',
-            identificationFeatures: 'Pink flowers, peltate leaves.',
-            imageUrl: '',
-            plantnetSpeciesName: 'Nelumbo nucifera',
-          );
+  Future<void> _openARMode() async {
+    if (!mounted) return;
+    if (_isCameraInitialized && _cameraController != null && !_cameraController!.value.isTakingPicture) {
+      try {
+        setState(() {
+          _isLoading = true;
+          _loadingText = 'Analyzing scene for AR...';
+          _errorMessage = null;
+        });
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ARViewScreen(plant: fallbackPlant),
-      ),
-    );
+        final xFile = await _cameraController!.takePicture();
+        if (!mounted) return;
+        final bytes = await xFile.readAsBytes();
+        if (!mounted) return;
+        
+        final IdentificationResult result = await IdentificationService.identifyPlantFromBytes(
+          bytes,
+          xFile.name,
+        );
+
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+          _loadingText = 'Point camera at leaf or flower';
+        });
+
+        if (result.success && result.plant != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ARViewScreen(plant: result.plant!),
+            ),
+          );
+          return;
+        }
+      } catch (e) {
+        debugPrint('AR camera capture error: $e');
+      }
+    }
+
+    // If camera fails or result is unsuccessful, just show a message instead of a fake plant
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _loadingText = 'Point camera at leaf or flower';
+        _errorMessage = 'Could not analyze for AR. Please capture a clear photo first.';
+      });
+    }
   }
 
   @override

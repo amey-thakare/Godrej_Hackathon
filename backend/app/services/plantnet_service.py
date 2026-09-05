@@ -70,18 +70,22 @@ class PlantNetService:
                     }
             except Exception as exc:
                 logger.error(f"Pl@ntNet API error: {str(exc)}")
+                raise exc
 
-        # DEMO_MODE / Fallback: Pick species deterministically using hash of image bytes
-        logger.info("Pl@ntNet Service using DEMO_MODE / deterministic mock pool.")
-        hash_idx = int(hashlib.md5(image_bytes).hexdigest(), 16) % len(MOCK_SPECIES_POOL)
-        mock_item = MOCK_SPECIES_POOL[hash_idx]
+        if settings.DEMO_MODE:
+            # DEMO_MODE / Fallback: Pick species deterministically using hash of image bytes
+            logger.info("Pl@ntNet Service using DEMO_MODE / deterministic mock pool.")
+            hash_idx = int(hashlib.md5(image_bytes).hexdigest(), 16) % len(MOCK_SPECIES_POOL)
+            mock_item = MOCK_SPECIES_POOL[hash_idx]
 
-        return {
-            "scientific_name": mock_item["scientific_name"],
-            "common_name": mock_item["common_name"],
-            "confidence": mock_item["confidence"],
-            "raw": {"mock": True, "index": hash_idx}
-        }
+            return {
+                "scientific_name": mock_item["scientific_name"],
+                "common_name": mock_item["common_name"],
+                "confidence": mock_item["confidence"],
+                "raw": {"mock": True, "index": hash_idx}
+            }
+        else:
+            raise ValueError("PlantNet API failed and DEMO_MODE is false")
 
 
 plantnet_service = PlantNetService()
